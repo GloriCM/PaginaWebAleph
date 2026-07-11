@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Prototipo — Comentarios de clientes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --cyan: #00b4e4;
+      --sky: #38bdf8;
+      --magenta: #e91e8c;
+      --yellow: #ffd400;
+      --ink: #1c1f24;
+      --muted: #5a6068;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Poppins, system-ui, sans-serif;
+      color: var(--ink);
+      min-height: 100vh;
+      background:
+        radial-gradient(ellipse 50% 40% at 10% 15%, rgba(0,174,239,0.22), transparent 55%),
+        radial-gradient(ellipse 45% 35% at 90% 20%, rgba(230,0,126,0.16), transparent 50%),
+        radial-gradient(ellipse 45% 40% at 50% 95%, rgba(255,212,0,0.2), transparent 55%),
+        #f4f6f8;
+    }
+
+    .shell {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 1.5rem 1.25rem 3rem;
+    }
+
+    h1 {
+      font-family: "Playfair Display", Georgia, serif;
+      font-size: 1.65rem;
+      margin-bottom: 0.35rem;
+    }
+
+    .intro {
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin-bottom: 1.25rem;
+      max-width: 62ch;
+    }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      margin-bottom: 1rem;
+    }
+
+    .tab {
+      border: 1px solid #d5d8de;
+      background: rgba(255,255,255,0.8);
+      color: #3a4048;
+      border-radius: 999px;
+      padding: 0.5rem 0.9rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .tab:hover { border-color: var(--sky); color: var(--sky); }
+    .tab.active {
+      background: var(--sky);
+      border-color: var(--sky);
+      color: #fff;
+    }
+
+    .stage-wrap {
+      border-radius: 22px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.85);
+      background: rgba(255,255,255,0.4);
+      backdrop-filter: blur(16px);
+      box-shadow: 0 12px 36px rgba(28,31,36,0.08);
+      padding: 1.75rem 1.5rem 2rem;
+      min-height: 420px;
+    }
+
+    .titulo {
+      font-family: "Playfair Display", Georgia, serif;
+      text-align: center;
+      font-size: 1.7rem;
+      margin-bottom: 0.35rem;
+    }
+
+    .dots {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      margin-bottom: 1.35rem;
+    }
+
+    .dots span { width: 8px; height: 8px; border-radius: 50%; }
+    .dots .c { background: #00aeef; }
+    .dots .m { background: #e6007e; }
+    .dots .y { background: #ffd400; }
+    .dots .k { background: #1a1a1a; }
+
+    .card {
+      background: rgba(255,255,255,0.82);
+      border-radius: 14px;
+      padding: 1.2rem;
+      border-left: 3px solid var(--cyan);
+      box-shadow: 0 8px 24px rgba(28,31,36,0.06);
+    }
+
+    .card p {
+      font-style: italic;
+      color: #4f5660;
+      font-size: 0.9rem;
+      line-height: 1.55;
+      margin-bottom: 0.75rem;
+    }
+
+    .card strong { display: block; font-size: 0.86rem; }
+    .card span { font-size: 0.75rem; color: var(--muted); }
+
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    /* 1 Grilla */
+    .op1 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+    }
+    @media (max-width: 800px) { .op1 { grid-template-columns: repeat(2, 1fr); } }
+
+    /* 2 Carrusel */
+    .op2 {
+      display: flex;
+      gap: 1rem;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      padding-bottom: 0.4rem;
+    }
+    .op2 .card { flex: 0 0 min(280px, 78vw); scroll-snap-align: start; }
+    .carrusel-nav {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-top: 0.85rem;
+    }
+    .carrusel-nav button {
+      width: 36px; height: 36px; border-radius: 50%;
+      border: 1px solid #d5d8de; background: #fff; cursor: pointer; font-size: 1rem;
+    }
+
+    /* 3 Lista */
+    .op3 { max-width: 720px; margin: 0 auto; }
+    .fila {
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      gap: 1rem;
+      padding: 0.85rem 0;
+      border-bottom: 1px solid rgba(28,31,36,0.08);
+    }
+    .fila__meta strong {
+      display: block;
+      font-family: "Playfair Display", Georgia, serif;
+      font-size: 0.9rem;
+    }
+    .fila__meta span { font-size: 0.72rem; color: var(--muted); }
+    .fila p { font-size: 0.9rem; color: #4f5660; font-style: italic; line-height: 1.5; }
+    @media (max-width: 560px) { .fila { grid-template-columns: 1fr; gap: 0.3rem; } }
+
+    /* 4 Destacado + miniaturas */
+    .op4 {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 1.25rem;
+      align-items: stretch;
+    }
+    .op4__main {
+      background: rgba(255,255,255,0.88);
+      border-radius: 18px;
+      padding: 1.75rem 1.5rem;
+      border-top: 3px solid var(--sky);
+      box-shadow: 0 10px 28px rgba(28,31,36,0.07);
+    }
+    .op4__main p {
+      font-family: "Playfair Display", Georgia, serif;
+      font-style: italic;
+      font-size: 1.25rem;
+      line-height: 1.45;
+      margin-bottom: 1.1rem;
+    }
+    .op4__side { display: flex; flex-direction: column; gap: 0.65rem; }
+    .op4__mini {
+      background: rgba(255,255,255,0.75);
+      border-radius: 12px;
+      padding: 0.75rem 0.9rem;
+      border-left: 2px solid var(--magenta);
+      cursor: default;
+    }
+    .op4__mini p {
+      font-size: 0.78rem;
+      color: #4f5660;
+      font-style: italic;
+      margin-bottom: 0.35rem;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .op4__mini strong { font-size: 0.75rem; }
+    @media (max-width: 720px) { .op4 { grid-template-columns: 1fr; } }
+
+    /* 5 Cita centrada (una a la vez) */
+    .op5 {
+      max-width: 560px;
+      margin: 0 auto;
+      text-align: center;
+      padding: 1.5rem 1rem 0.5rem;
+    }
+    .op5__quote {
+      font-family: "Playfair Display", Georgia, serif;
+      font-style: italic;
+      font-size: clamp(1.2rem, 2.5vw, 1.55rem);
+      line-height: 1.4;
+      margin-bottom: 1.25rem;
+      color: var(--ink);
+    }
+    .op5__author { font-weight: 600; font-size: 0.95rem; }
+    .op5__role { color: var(--muted); font-size: 0.8rem; margin-bottom: 1.25rem; }
+    .op5__pips {
+      display: flex;
+      justify-content: center;
+      gap: 0.45rem;
+    }
+    .op5__pips button {
+      width: 9px; height: 9px; border-radius: 50%;
+      border: none; background: #c8ccd2; cursor: pointer;
+    }
+    .op5__pips button.on { background: var(--sky); }
+
+    /* 6 Muro / masonry */
+    .op6 {
+      columns: 3;
+      column-gap: 0.85rem;
+    }
+    .op6 .card {
+      break-inside: avoid;
+      margin-bottom: 0.85rem;
+      padding: 0.95rem 1rem;
+      border-left-width: 2px;
+    }
+    .op6 .card p { font-size: 0.82rem; margin-bottom: 0.55rem; }
+    .op6 .card:nth-child(3n+1) { border-left-color: var(--cyan); }
+    .op6 .card:nth-child(3n+2) { border-left-color: var(--magenta); }
+    .op6 .card:nth-child(3n) { border-left-color: var(--yellow); }
+    @media (max-width: 800px) { .op6 { columns: 2; } }
+    @media (max-width: 480px) { .op6 { columns: 1; } }
+
+    /* 7 Burbujas chat */
+    .op7 {
+      max-width: 640px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+    .burbuja {
+      max-width: 85%;
+      padding: 0.85rem 1.05rem;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.88);
+      box-shadow: 0 6px 18px rgba(28,31,36,0.06);
+    }
+    .burbuja--izq {
+      align-self: flex-start;
+      border-bottom-left-radius: 4px;
+      border: 1px solid rgba(56,189,248,0.25);
+    }
+    .burbuja--der {
+      align-self: flex-end;
+      border-bottom-right-radius: 4px;
+      border: 1px solid rgba(233,30,140,0.2);
+      background: rgba(255,255,255,0.95);
+    }
+    .burbuja p { font-size: 0.88rem; color: #4f5660; margin-bottom: 0.4rem; line-height: 1.45; }
+    .burbuja strong { font-size: 0.78rem; }
+    .burbuja span { font-size: 0.7rem; color: var(--muted); margin-left: 0.35rem; }
+
+    /* 8 Rating + fila horizontal */
+    .op8 {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      max-width: 780px;
+      margin: 0 auto;
+    }
+    .rating-row {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 1rem;
+      align-items: center;
+      background: rgba(255,255,255,0.8);
+      border-radius: 14px;
+      padding: 0.85rem 1.1rem;
+      box-shadow: 0 6px 18px rgba(28,31,36,0.05);
+    }
+    .rating-row__stars {
+      color: #e6b800;
+      font-size: 0.85rem;
+      letter-spacing: 1px;
+      white-space: nowrap;
+    }
+    .rating-row p {
+      font-size: 0.86rem;
+      color: #4f5660;
+      font-style: italic;
+      line-height: 1.4;
+    }
+    .rating-row__who {
+      text-align: right;
+      white-space: nowrap;
+    }
+    .rating-row__who strong { display: block; font-size: 0.8rem; }
+    .rating-row__who span { font-size: 0.7rem; color: var(--muted); }
+    @media (max-width: 640px) {
+      .rating-row {
+        grid-template-columns: 1fr;
+        gap: 0.35rem;
+      }
+      .rating-row__who { text-align: left; }
+    }
+
+    .detail {
+      margin-top: 1rem;
+      padding: 0.9rem 1rem;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.55);
+      border: 1px solid rgba(255,255,255,0.9);
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+    .detail strong { color: var(--ink); }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <h1>Más opciones de comentarios</h1>
+    <p class="intro">
+      Además de las 3 anteriores, aquí hay 5 estilos nuevos. Cambia de pestaña,
+      mira cuál te convence y dime el número.
+    </p>
+
+    <div class="tabs" role="tablist">
+      <button class="tab active" type="button" data-id="op1">1 · Grilla</button>
+      <button class="tab" type="button" data-id="op2">2 · Carrusel</button>
+      <button class="tab" type="button" data-id="op3">3 · Lista</button>
+      <button class="tab" type="button" data-id="op4">4 · Destacado</button>
+      <button class="tab" type="button" data-id="op5">5 · Cita grande</button>
+      <button class="tab" type="button" data-id="op6">6 · Muro</button>
+      <button class="tab" type="button" data-id="op7">7 · Burbujas</button>
+      <button class="tab" type="button" data-id="op8">8 · Con estrellas</button>
+    </div>
+
+    <div class="stage-wrap">
+      <!-- 1 -->
+      <div class="panel active" id="op1">
+        <h2 class="titulo">Lo que dicen nuestros clientes</h2>
+        <div class="dots"><span class="c"></span><span class="m"></span><span class="y"></span><span class="k"></span></div>
+        <div class="op1">
+          <article class="card"><p>"Aliado clave en el rediseño de nuestros empaques."</p><strong>María González</strong><span>Marketing</span></article>
+          <article class="card"><p>"Acabados especiales que superaron expectativas."</p><strong>Carlos Ruiz</strong><span>Compras</span></article>
+          <article class="card"><p>"Empaques premium con la identidad de nuestra marca."</p><strong>Ana Martínez</strong><span>Boutique</span></article>
+          <article class="card"><p>"Cumplieron plazos con excelente calidad."</p><strong>Luis Pérez</strong><span>Retail</span></article>
+          <article class="card"><p>"Acompañamiento claro de principio a fin."</p><strong>Sofía Díaz</strong><span>Marketing</span></article>
+          <article class="card"><p>"Resultados consistentes. Los recomendamos."</p><strong>Andrés Mora</strong><span>Compras</span></article>
+        </div>
+      </div>
+
+      <!-- 2 -->
+      <div class="panel" id="op2">
+        <h2 class="titulo">Lo que dicen nuestros clientes</h2>
+        <div class="dots"><span class="c"></span><span class="m"></span><span class="y"></span><span class="k"></span></div>
+        <div class="op2" id="carrusel">
+          <article class="card"><p>"Aliado clave en el rediseño de nuestros empaques."</p><strong>María González</strong><span>Marketing</span></article>
+          <article class="card"><p>"Acabados especiales que superaron expectativas."</p><strong>Carlos Ruiz</strong><span>Compras</span></article>
+          <article class="card"><p>"Empaques premium con la identidad de nuestra marca."</p><strong>Ana Martínez</strong><span>Boutique</span></article>
+          <article class="card"><p>"Cumplieron plazos con excelente calidad."</p><strong>Luis Pérez</strong><span>Retail</span></article>
+          <article class="card"><p>"Acompañamiento claro de principio a fin."</p><strong>Sofía Díaz</strong><span>Marketing</span></article>
+        </div>
+        <div class="carrusel-nav">
+          <button type="button" id="prev">‹</button>
+          <button type="button" id="next">›</button>
+        </div>
+      </div>
+
+      <!-- 3 -->
+      <div class="panel" id="op3">
+        <h2 class="titulo">Lo que dicen nuestros clientes</h2>
+        <div class="dots"><span class="c"></span><span class="m"></span><span class="y"></span><span class="k"></span></div>
+        <div class="op3">
+          <div class="fila"><div class="fila__meta"><strong>María González</strong><span>Marketing</span></div><p>"Aliado clave en el rediseño de nuestros empaques."</p></div>
+          <div class="fila"><div class="fila__meta"><strong>Carlos Ruiz</strong><span>Compras</span></div><p>"Acabados especiales que superaron expectativas."</p></div>
+          <div class="fila"><div class="fila__meta"><strong>Ana Martínez</strong><span>Boutique</span></div><p>"Empaques premium con la identidad de nuestra marca."</p></div>
+          <div class="fila"><div class="fila__meta"><strong>Luis Pérez</strong><span>Retail</span></div><p>"Cumplieron plazos con excelente calidad."</p></div>
+        </div>
+      </div>
+
+      <!-- 4 Destacado -->
+      <div class="panel" id="op4">
+        <h2 class="titulo">Lo que dicen nuestros clientes</h2>
+        <div class="dots"><span class="c"></span><span class="m"></span><span class="y"></span><span class="k"></span></div>
+        <div class="op4">
+          <div class="op4__main">
+            <p>"Aleph Impresores ha sido un aliado clave en el rediseño de nuestros empaques. Su equipo creativo y cumplimiento de plazos nos permitieron lanzar a tiempo."</p>
+            <strong>María González</strong>
+            <span style="color:var(--muted);font-size:0.8rem">Gerente de Marketing · Distribuidora Nacional</span>
+          </div>
+          <div class="op4__side">
+            <div class="op4__mini"><p>"Acabados especiales que superaron expectativas."</p><strong>Carlos Ruiz</strong></div>
+            <div class="op4__mini"><p>"Empaques premium con la identidad de nuestra marca."</p><strong>Ana Martínez</strong></div>
+            <div class="op4__mini"><p>"Cumplieron plazos con excelente calidad."</p><strong>Luis Pérez</strong></div>
+            <div class="op4__mini"><p>"Acompañamiento claro de principio a fin."</p><strong>Sofía Díaz</strong></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5 Cita grande -->
+      <div class="panel" id="op5">
+        <h2 class="titulo">Lo que dicen nuestros clientes</h2>
+        <div class="dots"><span class="c"></span><span class="m"></span><span class="y"></span><span class="k"></span></div>
+        <div class="op5">
+          <p class="op5__quote" id="citaTexto">"Aleph Impresores ha sido un aliado clave en el rediseño de nuestros empaques."</p>
+          <div class="op5__author" id="citaAutor">María González</div>
+          <div class="op5__role" id="citaRol">Gerente de Marketing</div>
+          <div class="op5__pips" id="citaPips"></div>
+        </div>
+      </div>
+
+      <!-- 6 Muro -->
+      <div class="panel" id="op6">
+        <h2 class="titulo">Lo que dicen nuestros clientes</h2>
+        <div class="dots"><span class="c"></span><span class="m"></span><span class="y"></span><span class="k"></span></div>
+        <div class="op6">
+          <article class="card"><p>"Aliado clave en el rediseño de nuestros empaques. Cumplieron plazos y calidad."</p><strong>María González</strong><span>Marketing</span></article>
+          <article class="card"><p>"Excelente."</p><strong>Pedro N.</strong><span>Cliente</span></article>
+          <article class="card"><p>"Acabados especiales que superaron expectativas. Recomendados."</p><strong>Carlos Ruiz</strong><span>Compras</span></article>
+          <article class="card"><p>"Empaques premium con la identidad de nuestra marca."</p><strong>Ana Martínez</strong><span>Boutique</span></article>
+          <article class="card"><p>"Rápidos y claros."</p><strong>Laura V.</strong><span>Retail</span></article>
+          <article class="card"><p>"Acompañamiento de principio a fin. Muy profesionales."</p><strong>Sofía Díaz</strong><span>Marketing</span></article>
+          <article class="card"><p>"Resultados consistentes en cada pedido."</p><strong>Andrés Mora</strong><span>Compras</span></article>
+          <article class="card"><p>"Volveremos a trabajar con ellos."</p><strong>Diana C.</strong><span>Farmacéutica</span></article>
+        </div>
+      </div>
+
+      <!-- 7 Burbujas -->
+      <div class="panel" id="op7">
+        <h2 class="titulo">Lo que dicen nuestros clientes</h2>
+        <div class="dots"><span class="c"></span><span class="m"></span><span class="y"></span><span class="k"></span></div>
+        <div class="op7">
+          <div class="burbuja burbuja--izq"><p>Aliado clave en el rediseño de nuestros empaques.</p><strong>María González</strong><span>Marketing</span></div>
+          <div class="burbuja burbuja--der"><p>Acabados especiales que superaron expectativas.</p><strong>Carlos Ruiz</strong><span>Compras</span></div>
+          <div class="burbuja burbuja--izq"><p>Empaques premium con la identidad de nuestra marca.</p><strong>Ana Martínez</strong><span>Boutique</span></div>
+          <div class="burbuja burbuja--der"><p>Cumplieron plazos con excelente calidad.</p><strong>Luis Pérez</strong><span>Retail</span></div>
+        </div>
+      </div>
+
+      <!-- 8 Estrellas -->
+      <div class="panel" id="op8">
+        <h2 class="titulo">Lo que dicen nuestros clientes</h2>
+        <div class="dots"><span class="c"></span><span class="m"></span><span class="y"></span><span class="k"></span></div>
+        <div class="op8">
+          <div class="rating-row">
+            <div class="rating-row__stars">★★★★★</div>
+            <p>"Aliado clave en el rediseño de nuestros empaques."</p>
+            <div class="rating-row__who"><strong>María González</strong><span>Marketing</span></div>
+          </div>
+          <div class="rating-row">
+            <div class="rating-row__stars">★★★★★</div>
+            <p>"Acabados especiales que superaron expectativas."</p>
+            <div class="rating-row__who"><strong>Carlos Ruiz</strong><span>Compras</span></div>
+          </div>
+          <div class="rating-row">
+            <div class="rating-row__stars">★★★★☆</div>
+            <p>"Empaques premium con la identidad de nuestra marca."</p>
+            <div class="rating-row__who"><strong>Ana Martínez</strong><span>Boutique</span></div>
+          </div>
+          <div class="rating-row">
+            <div class="rating-row__stars">★★★★★</div>
+            <p>"Cumplieron plazos con excelente calidad."</p>
+            <div class="rating-row__who"><strong>Luis Pérez</strong><span>Retail</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="detail" id="detail">
+      <strong>1 · Grilla:</strong> tarjetas en filas de 3. Ordenada y crece hacia abajo.
+    </p>
+  </div>
+
+  <script>
+    const details = {
+      op1: "<strong>1 · Grilla:</strong> tarjetas en filas de 3. Ordenada y crece hacia abajo.",
+      op2: "<strong>2 · Carrusel:</strong> se deslizan. Caben muchos sin ocupar toda la página.",
+      op3: "<strong>3 · Lista:</strong> sin tarjetas. Nombre + comentario. Muy limpia.",
+      op4: "<strong>4 · Destacado:</strong> un comentario grande a la izquierda y el resto en miniaturas.",
+      op5: "<strong>5 · Cita grande:</strong> una sola opinión a la vez, tipografía editorial. Elegante.",
+      op6: "<strong>6 · Muro:</strong> estilo Pinterest/masonry. Ideal cuando hay muchos comentarios de distinto largo.",
+      op7: "<strong>7 · Burbujas:</strong> como un chat. Cercana y moderna.",
+      op8: "<strong>8 · Con estrellas:</strong> filas con rating. Útil si quieres mostrar valoración."
+    };
+
+    const tabs = document.querySelectorAll(".tab");
+    const panels = document.querySelectorAll(".panel");
+    const detail = document.getElementById("detail");
+
+    tabs.forEach((tab) => {
+      tab.addEventListener("click", () => {
+        const id = tab.dataset.id;
+        tabs.forEach((t) => t.classList.toggle("active", t === tab));
+        panels.forEach((p) => p.classList.toggle("active", p.id === id));
+        detail.innerHTML = details[id];
+      });
+    });
+
+    const carrusel = document.getElementById("carrusel");
+    document.getElementById("prev").addEventListener("click", () => {
+      carrusel.scrollBy({ left: -300, behavior: "smooth" });
+    });
+    document.getElementById("next").addEventListener("click", () => {
+      carrusel.scrollBy({ left: 300, behavior: "smooth" });
+    });
+
+    const citas = [
+      { q: '"Aleph Impresores ha sido un aliado clave en el rediseño de nuestros empaques."', a: "María González", r: "Gerente de Marketing" },
+      { q: '"La calidad de impresión y los acabados especiales superaron nuestras expectativas."', a: "Carlos Ruiz", r: "Director de Compras" },
+      { q: '"Las bolsas y empaques premium reflejan perfectamente la identidad de nuestra marca."', a: "Ana Martínez", r: "Propietaria" }
+    ];
+    let citaIdx = 0;
+    const pips = document.getElementById("citaPips");
+    citas.forEach((_, i) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      if (i === 0) b.classList.add("on");
+      b.addEventListener("click", () => mostrarCita(i));
+      pips.appendChild(b);
+    });
+
+    function mostrarCita(i) {
+      citaIdx = i;
+      document.getElementById("citaTexto").textContent = citas[i].q;
+      document.getElementById("citaAutor").textContent = citas[i].a;
+      document.getElementById("citaRol").textContent = citas[i].r;
+      [...pips.children].forEach((el, n) => el.classList.toggle("on", n === i));
+    }
+
+    setInterval(() => {
+      if (!document.getElementById("op5").classList.contains("active")) return;
+      mostrarCita((citaIdx + 1) % citas.length);
+    }, 4000);
+  </script>
+</body>
+</html>

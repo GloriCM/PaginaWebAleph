@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Prototipo — Más valoraciones</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --sky: #38bdf8;
+      --magenta: #e91e8c;
+      --yellow: #ffd400;
+      --gold: #e6b800;
+      --ink: #1c1f24;
+      --muted: #5a6068;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Poppins, system-ui, sans-serif;
+      color: var(--ink);
+      min-height: 100vh;
+      background:
+        radial-gradient(ellipse 50% 40% at 10% 15%, rgba(0,174,239,0.22), transparent 55%),
+        radial-gradient(ellipse 45% 35% at 90% 20%, rgba(230,0,126,0.16), transparent 50%),
+        radial-gradient(ellipse 45% 40% at 50% 95%, rgba(255,212,0,0.2), transparent 55%),
+        #f4f6f8;
+    }
+
+    .shell { max-width: 760px; margin: 0 auto; padding: 1.5rem 1.25rem 3rem; }
+
+    h1 {
+      font-family: "Playfair Display", Georgia, serif;
+      font-size: 1.55rem;
+      margin-bottom: 0.35rem;
+    }
+
+    .intro {
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin-bottom: 1.25rem;
+      max-width: 56ch;
+    }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-bottom: 0.9rem;
+    }
+
+    .tab {
+      border: 1px solid #d5d8de;
+      background: rgba(255,255,255,0.8);
+      color: #3a4048;
+      border-radius: 999px;
+      padding: 0.45rem 0.8rem;
+      font-size: 0.74rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .tab:hover { border-color: var(--sky); color: var(--sky); }
+    .tab.active {
+      background: var(--sky);
+      border-color: var(--sky);
+      color: #fff;
+    }
+
+    .stage {
+      border-radius: 22px;
+      border: 1px solid rgba(255,255,255,0.85);
+      background: rgba(255,255,255,0.45);
+      backdrop-filter: blur(16px);
+      box-shadow: 0 12px 36px rgba(28,31,36,0.08);
+      padding: 2rem 1.5rem;
+      min-height: 220px;
+    }
+
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    .label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 0.85rem;
+      text-align: center;
+    }
+
+    .hint {
+      text-align: center;
+      margin-top: 0.7rem;
+      font-size: 0.82rem;
+      color: var(--muted);
+      min-height: 1.2em;
+    }
+
+    /* V1 */
+    .v1 { display: flex; flex-wrap: wrap; gap: 0.4rem; justify-content: center; }
+    .v1 button {
+      border: 1px solid rgba(28,31,36,0.12);
+      background: rgba(255,255,255,0.7);
+      color: #c8ccd2;
+      border-radius: 999px;
+      padding: 0.35rem 0.7rem;
+      font-size: 0.85rem;
+      letter-spacing: 1px;
+      cursor: pointer;
+    }
+    .v1 button.on {
+      color: var(--gold);
+      border-color: rgba(230,184,0,0.45);
+      background: rgba(255,248,220,0.9);
+    }
+
+    /* V2 */
+    .stars-row { display: flex; gap: 0.3rem; justify-content: center; }
+    .stars-row button {
+      border: none;
+      background: transparent;
+      font-size: 2rem;
+      color: #d0d4da;
+      cursor: pointer;
+      line-height: 1;
+      padding: 0.1rem;
+    }
+    .stars-row button.on { color: var(--gold); }
+
+    /* V3 */
+    .v3 { display: flex; justify-content: center; }
+    .v3 select {
+      appearance: none;
+      border: 1px solid rgba(56,189,248,0.35);
+      background: rgba(255,255,255,0.85);
+      border-radius: 999px;
+      padding: 0.7rem 2.5rem 0.7rem 1.15rem;
+      font-family: inherit;
+      font-size: 0.95rem;
+      min-width: 210px;
+      cursor: pointer;
+      background-image:
+        linear-gradient(45deg, transparent 50%, var(--sky) 50%),
+        linear-gradient(135deg, var(--sky) 50%, transparent 50%);
+      background-position: calc(100% - 18px) 55%, calc(100% - 12px) 55%;
+      background-size: 6px 6px, 6px 6px;
+      background-repeat: no-repeat;
+    }
+
+    /* V4 */
+    .v4 { display: flex; gap: 0.5rem; justify-content: center; }
+    .v4 button {
+      width: 52px; height: 52px; border-radius: 50%;
+      border: 1px solid rgba(28,31,36,0.1);
+      background: rgba(255,255,255,0.75);
+      font-size: 1.4rem; cursor: pointer;
+    }
+    .v4 button.on {
+      box-shadow: 0 0 0 3px rgba(56,189,248,0.25);
+      border-color: var(--sky);
+      transform: scale(1.08);
+    }
+
+    /* V5 */
+    .v5 { max-width: 300px; margin: 0 auto; text-align: center; }
+    .v5 input { width: 100%; accent-color: var(--gold); }
+    .v5-stars { margin-top: 0.5rem; font-size: 1.45rem; color: var(--gold); letter-spacing: 2px; }
+
+    /* V6 */
+    .v6 { display: flex; gap: 0.45rem; justify-content: center; }
+    .v6 button {
+      width: 44px; height: 44px; border-radius: 50%;
+      border: 1px solid rgba(28,31,36,0.12);
+      background: rgba(255,255,255,0.75);
+      font-weight: 700; color: var(--muted); cursor: pointer;
+    }
+    .v6 button.on {
+      background: linear-gradient(160deg, #7dd3f8, #38bdf8 55%, #0ea5e9);
+      color: #fff; border-color: transparent;
+    }
+
+    /* V7 */
+    .v7 { display: flex; gap: 4px; justify-content: center; max-width: 280px; margin: 0 auto; }
+    .v7 button {
+      flex: 1; height: 14px; border: none; border-radius: 4px;
+      background: #e5e7eb; cursor: pointer; padding: 0;
+    }
+    .v7 button:nth-child(1).on { background: #00aeef; }
+    .v7 button:nth-child(2).on { background: #e6007e; }
+    .v7 button:nth-child(3).on { background: #ffd400; }
+    .v7 button:nth-child(4).on { background: #7c8490; }
+    .v7 button:nth-child(5).on { background: #1a1a1a; }
+
+    /* V8 */
+    .v8-msg {
+      text-align: center;
+      font-family: "Playfair Display", Georgia, serif;
+      font-size: 1.15rem;
+      margin-top: 0.55rem;
+      min-height: 1.4em;
+    }
+
+    /* V9 thumbs */
+    .v9 { display: flex; gap: 1rem; justify-content: center; }
+    .v9 button {
+      width: 64px; height: 64px; border-radius: 18px;
+      border: 1px solid rgba(28,31,36,0.1);
+      background: rgba(255,255,255,0.8);
+      font-size: 1.8rem; cursor: pointer;
+    }
+    .v9 button.on-up {
+      background: rgba(56,189,248,0.15);
+      border-color: var(--sky);
+      box-shadow: 0 0 0 3px rgba(56,189,248,0.2);
+    }
+    .v9 button.on-down {
+      background: rgba(233,30,140,0.12);
+      border-color: var(--magenta);
+      box-shadow: 0 0 0 3px rgba(233,30,140,0.18);
+    }
+
+    /* V10 heart */
+    .v10 { display: flex; gap: 0.25rem; justify-content: center; }
+    .v10 button {
+      border: none; background: transparent;
+      font-size: 1.85rem; color: #d0d4da; cursor: pointer;
+    }
+    .v10 button.on { color: var(--magenta); }
+
+    /* V11 step buttons */
+    .v11 {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+    }
+    .v11-btn {
+      width: 40px; height: 40px; border-radius: 50%;
+      border: 1px solid rgba(56,189,248,0.35);
+      background: #fff;
+      font-size: 1.25rem;
+      color: var(--sky);
+      cursor: pointer;
+      font-weight: 700;
+    }
+    .v11-value {
+      font-size: 1.6rem;
+      color: var(--gold);
+      letter-spacing: 2px;
+      min-width: 140px;
+      text-align: center;
+    }
+
+    /* V12 cards text */
+    .v12 {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 0.4rem;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+    .v12 button {
+      border: 1px solid rgba(28,31,36,0.1);
+      background: rgba(255,255,255,0.75);
+      border-radius: 12px;
+      padding: 0.65rem 0.25rem;
+      cursor: pointer;
+      font-size: 0.68rem;
+      font-weight: 600;
+      color: var(--muted);
+    }
+    .v12 button span { display: block; font-size: 1.1rem; margin-bottom: 0.2rem; }
+    .v12 button.on {
+      background: rgba(56,189,248,0.12);
+      border-color: var(--sky);
+      color: #0284c7;
+    }
+
+    @media (max-width: 560px) {
+      .v12 { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    /* V13 print dots */
+    .v13 { display: flex; gap: 0.65rem; justify-content: center; align-items: center; }
+    .v13 button {
+      width: 22px; height: 22px; border-radius: 50%;
+      border: 2px solid #c8ccd2;
+      background: transparent;
+      cursor: pointer;
+      padding: 0;
+    }
+    .v13 button.on { border-color: transparent; }
+    .v13 button:nth-child(1).on { background: #00aeef; }
+    .v13 button:nth-child(2).on { background: #e6007e; }
+    .v13 button:nth-child(3).on { background: #ffd400; }
+    .v13 button:nth-child(4).on { background: #7c8490; }
+    .v13 button:nth-child(5).on { background: #1a1a1a; }
+
+    /* V14 half stars visual as toggle pairs - simplified as 5 with half feel using outline */
+    .v14 { display: flex; gap: 0.15rem; justify-content: center; }
+    .v14 button {
+      border: none; background: transparent;
+      font-size: 1.7rem; cursor: pointer;
+      background: linear-gradient(90deg, var(--gold) 50%, #d0d4da 50%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      filter: grayscale(1);
+      opacity: 0.45;
+    }
+    .v14 button.on {
+      filter: none;
+      opacity: 1;
+      background: var(--gold);
+      -webkit-background-clip: text;
+      background-clip: text;
+    }
+
+    /* V15 progress ring */
+    .v15 { display: flex; flex-direction: column; align-items: center; gap: 0.75rem; }
+    .ring {
+      width: 88px; height: 88px; border-radius: 50%;
+      display: grid; place-items: center;
+      background:
+        radial-gradient(closest-side, #fff 72%, transparent 73% 100%),
+        conic-gradient(var(--gold) calc(var(--p) * 1%), #e5e7eb 0);
+      font-weight: 700;
+      font-size: 1.15rem;
+    }
+    .v15-controls { display: flex; gap: 0.4rem; }
+    .v15-controls button {
+      width: 36px; height: 36px; border-radius: 50%;
+      border: 1px solid rgba(28,31,36,0.12);
+      background: #fff;
+      cursor: pointer;
+      font-weight: 700;
+      color: var(--muted);
+    }
+    .v15-controls button.on {
+      background: var(--gold);
+      color: #fff;
+      border-color: transparent;
+    }
+
+    .detail {
+      margin-top: 0.9rem;
+      padding: 0.85rem 1rem;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.55);
+      border: 1px solid rgba(255,255,255,0.9);
+      color: var(--muted);
+      font-size: 0.85rem;
+      line-height: 1.5;
+    }
+    .detail strong { color: var(--ink); }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <h1>Más opciones de valoración</h1>
+    <p class="intro">
+      Incluye las 8 anteriores y 7 nuevas. Elige un número (V1–V15) y lo aplico en el formulario.
+    </p>
+
+    <div class="tabs" id="tabs">
+      <button class="tab active" type="button" data-id="v1">V1 · Actual</button>
+      <button class="tab" type="button" data-id="v2">V2 · Estrellas</button>
+      <button class="tab" type="button" data-id="v3">V3 · Lista</button>
+      <button class="tab" type="button" data-id="v4">V4 · Caritas</button>
+      <button class="tab" type="button" data-id="v5">V5 · Slider</button>
+      <button class="tab" type="button" data-id="v6">V6 · Números</button>
+      <button class="tab" type="button" data-id="v7">V7 · CMYK</button>
+      <button class="tab" type="button" data-id="v8">V8 · Mensaje</button>
+      <button class="tab" type="button" data-id="v9">V9 · Like</button>
+      <button class="tab" type="button" data-id="v10">V10 · Corazones</button>
+      <button class="tab" type="button" data-id="v11">V11 · + / −</button>
+      <button class="tab" type="button" data-id="v12">V12 · Etiquetas</button>
+      <button class="tab" type="button" data-id="v13">V13 · Puntos</button>
+      <button class="tab" type="button" data-id="v14">V14 · Estrella simple</button>
+      <button class="tab" type="button" data-id="v15">V15 · Anillo</button>
+    </div>
+
+    <div class="stage">
+      <div class="panel active" id="v1">
+        <p class="label">Valoración *</p>
+        <div class="v1" data-mode="exact">
+          <button type="button" data-n="5" class="on">★★★★★</button>
+          <button type="button" data-n="4">★★★★</button>
+          <button type="button" data-n="3">★★★</button>
+          <button type="button" data-n="2">★★</button>
+          <button type="button" data-n="1">★</button>
+        </div>
+      </div>
+
+      <div class="panel" id="v2">
+        <p class="label">Valoración *</p>
+        <div class="stars-row" data-mode="upto" data-hint="5 de 5 estrellas">
+          <button type="button" data-n="1" class="on">★</button>
+          <button type="button" data-n="2" class="on">★</button>
+          <button type="button" data-n="3" class="on">★</button>
+          <button type="button" data-n="4" class="on">★</button>
+          <button type="button" data-n="5" class="on">★</button>
+        </div>
+        <p class="hint" data-out>5 de 5 estrellas</p>
+      </div>
+
+      <div class="panel" id="v3">
+        <p class="label">Valoración *</p>
+        <div class="v3">
+          <select>
+            <option>★★★★★ Excelente</option>
+            <option>★★★★☆ Muy bueno</option>
+            <option>★★★☆☆ Bueno</option>
+            <option>★★☆☆☆ Regular</option>
+            <option>★☆☆☆☆ Malo</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="panel" id="v4">
+        <p class="label">Valoración *</p>
+        <div class="v4" data-mode="exact">
+          <button type="button" data-n="1">😞</button>
+          <button type="button" data-n="2">😐</button>
+          <button type="button" data-n="3">🙂</button>
+          <button type="button" data-n="4">😊</button>
+          <button type="button" data-n="5" class="on">🤩</button>
+        </div>
+      </div>
+
+      <div class="panel" id="v5">
+        <p class="label">Valoración *</p>
+        <div class="v5">
+          <input type="range" min="1" max="5" value="5" id="slider" />
+          <div class="v5-stars" id="sliderStars">★★★★★</div>
+        </div>
+      </div>
+
+      <div class="panel" id="v6">
+        <p class="label">Valoración *</p>
+        <div class="v6" data-mode="exact">
+          <button type="button" data-n="1">1</button>
+          <button type="button" data-n="2">2</button>
+          <button type="button" data-n="3">3</button>
+          <button type="button" data-n="4">4</button>
+          <button type="button" data-n="5" class="on">5</button>
+        </div>
+      </div>
+
+      <div class="panel" id="v7">
+        <p class="label">Valoración *</p>
+        <div class="v7" data-mode="upto" data-hint="5 / 5">
+          <button type="button" data-n="1" class="on"></button>
+          <button type="button" data-n="2" class="on"></button>
+          <button type="button" data-n="3" class="on"></button>
+          <button type="button" data-n="4" class="on"></button>
+          <button type="button" data-n="5" class="on"></button>
+        </div>
+        <p class="hint" data-out>5 / 5</p>
+      </div>
+
+      <div class="panel" id="v8">
+        <p class="label">Valoración *</p>
+        <div class="stars-row" data-mode="upto" data-msg="true">
+          <button type="button" data-n="1" class="on">★</button>
+          <button type="button" data-n="2" class="on">★</button>
+          <button type="button" data-n="3" class="on">★</button>
+          <button type="button" data-n="4" class="on">★</button>
+          <button type="button" data-n="5" class="on">★</button>
+        </div>
+        <p class="v8-msg" data-out>¡Excelente!</p>
+      </div>
+
+      <div class="panel" id="v9">
+        <p class="label">¿Recomendarías Aleph?</p>
+        <div class="v9">
+          <button type="button" id="up">👍</button>
+          <button type="button" id="down">👎</button>
+        </div>
+        <p class="hint" id="likeHint">Elige una opción</p>
+      </div>
+
+      <div class="panel" id="v10">
+        <p class="label">Valoración *</p>
+        <div class="v10" data-mode="upto" data-hint="5 corazones">
+          <button type="button" data-n="1" class="on">♥</button>
+          <button type="button" data-n="2" class="on">♥</button>
+          <button type="button" data-n="3" class="on">♥</button>
+          <button type="button" data-n="4" class="on">♥</button>
+          <button type="button" data-n="5" class="on">♥</button>
+        </div>
+        <p class="hint" data-out>5 corazones</p>
+      </div>
+
+      <div class="panel" id="v11">
+        <p class="label">Valoración *</p>
+        <div class="v11">
+          <button type="button" class="v11-btn" id="minus">−</button>
+          <div class="v11-value" id="stepValue">★★★★★</div>
+          <button type="button" class="v11-btn" id="plus">+</button>
+        </div>
+        <p class="hint" id="stepHint">5 de 5</p>
+      </div>
+
+      <div class="panel" id="v12">
+        <p class="label">Valoración *</p>
+        <div class="v12" data-mode="exact">
+          <button type="button" data-n="1"><span>★</span>Malo</button>
+          <button type="button" data-n="2"><span>★★</span>Regular</button>
+          <button type="button" data-n="3"><span>★★★</span>Bueno</button>
+          <button type="button" data-n="4"><span>★★★★</span>Muy bueno</button>
+          <button type="button" data-n="5" class="on"><span>★★★★★</span>Excelente</button>
+        </div>
+      </div>
+
+      <div class="panel" id="v13">
+        <p class="label">Valoración *</p>
+        <div class="v13" data-mode="upto" data-hint="5 puntos CMYK">
+          <button type="button" data-n="1" class="on"></button>
+          <button type="button" data-n="2" class="on"></button>
+          <button type="button" data-n="3" class="on"></button>
+          <button type="button" data-n="4" class="on"></button>
+          <button type="button" data-n="5" class="on"></button>
+        </div>
+        <p class="hint" data-out>5 puntos CMYK</p>
+      </div>
+
+      <div class="panel" id="v14">
+        <p class="label">Valoración *</p>
+        <div class="v14" data-mode="upto" data-hint="5 / 5">
+          <button type="button" data-n="1" class="on">★</button>
+          <button type="button" data-n="2" class="on">★</button>
+          <button type="button" data-n="3" class="on">★</button>
+          <button type="button" data-n="4" class="on">★</button>
+          <button type="button" data-n="5" class="on">★</button>
+        </div>
+        <p class="hint" data-out>5 / 5</p>
+      </div>
+
+      <div class="panel" id="v15">
+        <p class="label">Valoración *</p>
+        <div class="v15">
+          <div class="ring" id="ring" style="--p:100">5/5</div>
+          <div class="v15-controls" data-mode="exact">
+            <button type="button" data-n="1">1</button>
+            <button type="button" data-n="2">2</button>
+            <button type="button" data-n="3">3</button>
+            <button type="button" data-n="4">4</button>
+            <button type="button" data-n="5" class="on">5</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="detail" id="detail">
+      <strong>V1 · Actual:</strong> Pastillas con distintas cantidades de estrellas.
+    </p>
+  </div>
+
+  <script>
+    const details = {
+      v1: "<strong>V1 · Actual:</strong> Pastillas con distintas cantidades de estrellas.",
+      v2: "<strong>V2 · Estrellas:</strong> Una fila de 5 estrellas clicables. Estándar web.",
+      v3: "<strong>V3 · Lista:</strong> Menú desplegable. Muy compacto.",
+      v4: "<strong>V4 · Caritas:</strong> Emojis de mal a excelente.",
+      v5: "<strong>V5 · Slider:</strong> Deslizador 1–5.",
+      v6: "<strong>V6 · Números:</strong> Círculos 1 a 5 en azul.",
+      v7: "<strong>V7 · CMYK:</strong> Barra por segmentos con colores de marca.",
+      v8: "<strong>V8 · Mensaje:</strong> Estrellas + texto (“¡Excelente!”).",
+      v9: "<strong>V9 · Like:</strong> Solo 👍 / 👎. Simple, tipo recomendación.",
+      v10: "<strong>V10 · Corazones:</strong> Como estrellas, pero en magenta.",
+      v11: "<strong>V11 · + / −:</strong> Subes o bajas la nota con botones.",
+      v12: "<strong>V12 · Etiquetas:</strong> Tarjetitas con texto (Malo → Excelente).",
+      v13: "<strong>V13 · Puntos:</strong> Puntos CMYK del logo. Muy de marca.",
+      v14: "<strong>V14 · Estrella simple:</strong> Estrellas grandes, sin pastillas.",
+      v15: "<strong>V15 · Anillo:</strong> Indicador circular + números."
+    };
+
+    const msgs = { 1: "Malo", 2: "Regular", 3: "Bueno", 4: "Muy bueno", 5: "¡Excelente!" };
+
+    document.querySelectorAll(".tab").forEach((tab) => {
+      tab.addEventListener("click", () => {
+        const id = tab.dataset.id;
+        document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("active", t === tab));
+        document.querySelectorAll(".panel").forEach((p) => p.classList.toggle("active", p.id === id));
+        document.getElementById("detail").innerHTML = details[id];
+      });
+    });
+
+    function wire(group) {
+      const mode = group.dataset.mode;
+      group.querySelectorAll("button[data-n]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const n = Number(btn.dataset.n);
+          group.querySelectorAll("button[data-n]").forEach((b) => {
+            const bn = Number(b.dataset.n);
+            b.classList.toggle("on", mode === "exact" ? bn === n : bn <= n);
+          });
+          const panel = group.closest(".panel");
+          const out = panel.querySelector("[data-out]");
+          if (!out) return;
+          if (group.dataset.msg === "true") out.textContent = msgs[n];
+          else if (group.dataset.hint) out.textContent = group.dataset.hint.replace("5", String(n));
+          else out.textContent = `${n} / 5`;
+        });
+      });
+    }
+
+    document.querySelectorAll("[data-mode]").forEach(wire);
+
+    document.getElementById("slider").addEventListener("input", (e) => {
+      const n = Number(e.target.value);
+      document.getElementById("sliderStars").textContent = "★".repeat(n) + "☆".repeat(5 - n);
+    });
+
+    const up = document.getElementById("up");
+    const down = document.getElementById("down");
+    const likeHint = document.getElementById("likeHint");
+    up.addEventListener("click", () => {
+      up.classList.add("on-up");
+      down.classList.remove("on-down");
+      likeHint.textContent = "Sí, lo recomiendo";
+    });
+    down.addEventListener("click", () => {
+      down.classList.add("on-down");
+      up.classList.remove("on-up");
+      likeHint.textContent = "No lo recomendaría";
+    });
+
+    let step = 5;
+    const stepValue = document.getElementById("stepValue");
+    const stepHint = document.getElementById("stepHint");
+    function renderStep() {
+      stepValue.textContent = "★".repeat(step) + "☆".repeat(5 - step);
+      stepHint.textContent = `${step} de 5`;
+    }
+    document.getElementById("minus").addEventListener("click", () => {
+      step = Math.max(1, step - 1);
+      renderStep();
+    });
+    document.getElementById("plus").addEventListener("click", () => {
+      step = Math.min(5, step + 1);
+      renderStep();
+    });
+
+    const ring = document.getElementById("ring");
+    document.querySelector("#v15 .v15-controls").querySelectorAll("button").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const n = Number(btn.dataset.n);
+        document.querySelectorAll("#v15 .v15-controls button").forEach((b) => {
+          b.classList.toggle("on", Number(b.dataset.n) === n);
+        });
+        ring.style.setProperty("--p", String(n * 20));
+        ring.textContent = `${n}/5`;
+      });
+    });
+  </script>
+</body>
+</html>

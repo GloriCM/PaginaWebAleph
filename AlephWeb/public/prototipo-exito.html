@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Prototipo — Letrero de éxito</title>
+  <style>
+    :root {
+      --cyan: #00aeef;
+      --cyan-soft: #5ec8f0;
+      --magenta: #e6007e;
+      --yellow: #ffd400;
+      --ink: #1c1f24;
+      --muted: #5a6068;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Segoe UI", system-ui, sans-serif;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse 50% 40% at 15% 20%, rgba(0,174,239,0.18), transparent 55%),
+        radial-gradient(ellipse 45% 35% at 85% 30%, rgba(230,0,126,0.12), transparent 50%),
+        radial-gradient(ellipse 40% 35% at 50% 90%, rgba(255,212,0,0.16), transparent 50%),
+        #f6f8fb;
+    }
+
+    .shell {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 1.5rem 1.25rem 3rem;
+    }
+
+    h1 { font-size: 1.4rem; margin-bottom: 0.35rem; }
+    .intro { color: var(--muted); font-size: 0.95rem; margin-bottom: 1.25rem; max-width: 52ch; }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .tab {
+      border: 1px solid #d5d8de;
+      background: rgba(255,255,255,0.8);
+      color: #3a4048;
+      border-radius: 999px;
+      padding: 0.55rem 1rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .tab:hover { border-color: var(--cyan); color: var(--cyan); }
+    .tab.active {
+      background: var(--cyan);
+      border-color: var(--cyan);
+      color: #fff;
+    }
+
+    .stage-wrap {
+      border-radius: 22px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.8);
+      background: rgba(255,255,255,0.35);
+      backdrop-filter: blur(16px);
+      box-shadow: 0 12px 36px rgba(28,31,36,0.08);
+    }
+
+    .stage {
+      min-height: 360px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1.25rem;
+      position: relative;
+    }
+
+    .panel { display: none; width: min(100%, 520px); }
+    .panel.active { display: block; }
+
+    .meta {
+      padding: 1rem 1.25rem 1.25rem;
+      border-top: 1px solid rgba(28,31,36,0.08);
+      background: rgba(255,255,255,0.55);
+    }
+
+    .meta h2 { font-size: 1.05rem; margin-bottom: 0.35rem; }
+    .meta p { font-size: 0.9rem; color: var(--muted); line-height: 1.5; }
+
+    .note {
+      margin-top: 1rem;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    /* —— Opción actual —— */
+    .card-actual {
+      background: rgba(255,255,255,0.55);
+      border: 1px solid rgba(0,180,228,0.25);
+      border-radius: 18px;
+      padding: 2rem;
+      text-align: center;
+    }
+    .card-actual h3 { margin-bottom: 0.5rem; }
+    .card-actual p { color: var(--muted); margin-bottom: 1.25rem; }
+    .btn-outline {
+      display: inline-flex;
+      padding: 0.75rem 1.4rem;
+      border-radius: 999px;
+      border: 1px solid #cfd3da;
+      background: #fff;
+      color: var(--ink);
+      font-weight: 600;
+      text-decoration: none;
+      box-shadow: 0 4px 14px rgba(28,31,36,0.06);
+    }
+
+    /* —— Opción 1: Confirmación viva —— */
+    .card-viva {
+      background: rgba(255,255,255,0.55);
+      backdrop-filter: blur(14px);
+      border: 1.5px solid rgba(0,174,239,0.3);
+      border-radius: 22px;
+      padding: 2.25rem 2rem;
+      text-align: center;
+      box-shadow: 0 12px 32px rgba(0,174,239,0.12);
+      animation: subir 0.55s ease;
+    }
+    .check {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 1rem;
+      border-radius: 50%;
+      background: linear-gradient(160deg, var(--cyan-soft), var(--cyan));
+      display: grid;
+      place-items: center;
+      box-shadow: 0 8px 20px rgba(0,174,239,0.35);
+    }
+    .check svg { width: 30px; height: 30px; stroke: #fff; fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+    .card-viva h3 {
+      font-size: 1.45rem;
+      margin-bottom: 0.45rem;
+    }
+    .card-viva p {
+      color: var(--muted);
+      margin-bottom: 1.4rem;
+      line-height: 1.45;
+    }
+    .btn-cielo {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.9rem 1.8rem;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.5);
+      background: linear-gradient(160deg, #5ec8f0, #00aeef 55%, #0096d1);
+      color: #fff;
+      font-weight: 700;
+      text-decoration: none;
+      box-shadow: 0 8px 22px rgba(0,174,239,0.28);
+    }
+
+    /* —— Opción 2: Glass premium —— */
+    .card-premium {
+      position: relative;
+      overflow: hidden;
+      background: rgba(255,255,255,0.42);
+      backdrop-filter: blur(18px);
+      border: 1px solid rgba(255,255,255,0.8);
+      border-radius: 24px;
+      padding: 2.4rem 2rem 2rem;
+      text-align: center;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.9),
+        0 16px 40px rgba(28,31,36,0.08);
+      animation: subir 0.55s ease;
+    }
+    .card-premium::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--cyan), var(--magenta), var(--yellow), #1a1a1a);
+    }
+    .card-premium .dots {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      margin-bottom: 1rem;
+    }
+    .card-premium .dots span {
+      width: 8px; height: 8px; border-radius: 50%;
+    }
+    .d-c { background: var(--cyan); }
+    .d-m { background: var(--magenta); }
+    .d-y { background: var(--yellow); }
+    .d-k { background: #1a1a1a; }
+    .card-premium h3 { font-size: 1.35rem; margin-bottom: 0.45rem; }
+    .card-premium p { color: var(--muted); margin-bottom: 1.35rem; }
+
+    /* —— Opción 3: Con acciones —— */
+    .card-acciones {
+      background: rgba(255,255,255,0.55);
+      backdrop-filter: blur(14px);
+      border: 1.5px solid rgba(0,174,239,0.28);
+      border-radius: 22px;
+      padding: 2.1rem 1.75rem;
+      text-align: center;
+      animation: subir 0.55s ease;
+    }
+    .card-acciones .check { margin-bottom: 0.85rem; }
+    .card-acciones h3 { font-size: 1.35rem; margin-bottom: 0.4rem; }
+    .card-acciones p { color: var(--muted); margin-bottom: 1.35rem; }
+    .acciones {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      justify-content: center;
+    }
+    .btn-ghost {
+      display: inline-flex;
+      padding: 0.85rem 1.35rem;
+      border-radius: 14px;
+      border: 1.5px solid rgba(0,174,239,0.35);
+      background: rgba(255,255,255,0.55);
+      color: #0088c2;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    @keyframes subir {
+      from { opacity: 0; transform: translateY(14px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <h1>Prototipo — Letrero “Mensaje enviado”</h1>
+    <p class="intro">
+      Compara las opciones. Esto no cambia tu sitio: solo es una vista previa para decidir.
+    </p>
+
+    <div class="tabs">
+      <button class="tab active" type="button" data-id="actual">Actual</button>
+      <button class="tab" type="button" data-id="viva">1 · Confirmación viva</button>
+      <button class="tab" type="button" data-id="premium">2 · Glass premium</button>
+      <button class="tab" type="button" data-id="acciones">3 · Con acciones</button>
+    </div>
+
+    <div class="stage-wrap">
+      <div class="stage">
+        <!-- Actual -->
+        <div class="panel active" data-panel="actual">
+          <div class="card-actual">
+            <h3>¡Mensaje enviado!</h3>
+            <p>Gracias por contactarnos. Te responderemos a la brevedad.</p>
+            <a class="btn-outline" href="#">Enviar otro mensaje</a>
+          </div>
+        </div>
+
+        <!-- 1 -->
+        <div class="panel" data-panel="viva">
+          <div class="card-viva">
+            <div class="check" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </div>
+            <h3>¡Mensaje enviado!</h3>
+            <p>Gracias por escribirnos. Te responderemos muy pronto.</p>
+            <a class="btn-cielo" href="#">Enviar otro mensaje</a>
+          </div>
+        </div>
+
+        <!-- 2 -->
+        <div class="panel" data-panel="premium">
+          <div class="card-premium">
+            <div class="dots" aria-hidden="true">
+              <span class="d-c"></span>
+              <span class="d-m"></span>
+              <span class="d-y"></span>
+              <span class="d-k"></span>
+            </div>
+            <h3>¡Mensaje enviado!</h3>
+            <p>Recibimos tu consulta. El equipo de Aleph te contactará a la brevedad.</p>
+            <a class="btn-cielo" href="#">Enviar otro mensaje</a>
+          </div>
+        </div>
+
+        <!-- 3 -->
+        <div class="panel" data-panel="acciones">
+          <div class="card-acciones">
+            <div class="check" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </div>
+            <h3>¡Mensaje enviado!</h3>
+            <p>Gracias por contactarnos. ¿Qué quieres hacer ahora?</p>
+            <div class="acciones">
+              <a class="btn-cielo" href="#">Enviar otro</a>
+              <a class="btn-ghost" href="#">Ir al inicio</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="meta">
+        <h2 id="title">Actual</h2>
+        <p id="detail">Así se ve hoy. Sirve, pero se siente plano y el botón no destaca.</p>
+      </div>
+    </div>
+
+    <p class="note">
+      Ábrelo en: <strong>http://localhost:5173/prototipo-exito.html</strong>
+    </p>
+  </div>
+
+  <script>
+    const copy = {
+      actual: {
+        title: "Actual",
+        detail: "Así se ve hoy. Sirve, pero se siente plano y el botón no destaca."
+      },
+      viva: {
+        title: "1 · Confirmación viva",
+        detail: "Check azul cielo, título claro, botón del mismo color que “Enviar mensaje” y animación suave de entrada."
+      },
+      premium: {
+        title: "2 · Glass premium",
+        detail: "Franja CMYK, puntos del logo y tarjeta más elegante. Ideal si quieres reforzar marca."
+      },
+      acciones: {
+        title: "3 · Con acciones",
+        detail: "Misma energía que la opción 1, pero con dos botones: enviar otro o volver al inicio."
+      }
+    };
+
+    document.querySelectorAll(".tab").forEach((tab) => {
+      tab.addEventListener("click", () => {
+        const id = tab.dataset.id;
+        document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("active", t === tab));
+        document.querySelectorAll(".panel").forEach((p) => {
+          const on = p.dataset.panel === id;
+          p.classList.toggle("active", on);
+          if (on) {
+            const card = p.firstElementChild;
+            card.style.animation = "none";
+            void card.offsetWidth;
+            card.style.animation = "";
+          }
+        });
+        document.getElementById("title").textContent = copy[id].title;
+        document.getElementById("detail").textContent = copy[id].detail;
+      });
+    });
+  </script>
+</body>
+</html>

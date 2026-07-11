@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Prototipo — Efectos de fondo Aleph</title>
+  <style>
+    :root {
+      --cyan: #00aeef;
+      --magenta: #e6007e;
+      --yellow: #ffd400;
+      --ink: #1a1a1a;
+      --paper: #f7f8fa;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: #eceef2;
+      color: #1c1f24;
+      min-height: 100vh;
+    }
+
+    .shell {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 1.5rem 1.25rem 3rem;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 0.35rem;
+    }
+
+    .intro {
+      color: #5a6068;
+      font-size: 0.95rem;
+      margin-bottom: 1.25rem;
+      max-width: 52ch;
+    }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .tab {
+      border: 1px solid #d5d8de;
+      background: #fff;
+      color: #3a4048;
+      border-radius: 999px;
+      padding: 0.55rem 1rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .tab:hover { border-color: var(--cyan); color: var(--cyan); }
+    .tab.active {
+      background: var(--magenta);
+      border-color: var(--magenta);
+      color: #fff;
+    }
+
+    .stage-wrap {
+      border-radius: 20px;
+      overflow: hidden;
+      border: 1px solid #dde1e8;
+      background: #fff;
+    }
+
+    .stage {
+      position: relative;
+      height: min(58vh, 480px);
+      overflow: hidden;
+      background: var(--paper);
+    }
+
+    .stage-ui {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      pointer-events: none;
+      text-align: center;
+      padding: 1rem;
+    }
+
+    .stage-ui .fake-logo {
+      font-weight: 800;
+      font-size: 1.35rem;
+      letter-spacing: -0.03em;
+    }
+
+    .stage-ui .fake-logo span { color: var(--magenta); font-weight: 600; font-size: 0.85rem; }
+    .stage-ui .fake-card {
+      background: rgba(255,255,255,0.72);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.9);
+      border-radius: 16px;
+      padding: 1rem 1.25rem;
+      max-width: 320px;
+      box-shadow: 0 8px 24px rgba(28,31,36,0.08);
+    }
+
+    .stage-ui .fake-card p {
+      font-size: 0.88rem;
+      color: #4a5058;
+      line-height: 1.45;
+    }
+
+    .meta {
+      padding: 1rem 1.25rem 1.25rem;
+      background: #fff;
+      border-top: 1px solid #e8ebf0;
+    }
+
+    .meta h2 { font-size: 1.05rem; margin-bottom: 0.35rem; }
+    .meta p { font-size: 0.9rem; color: #5a6068; line-height: 1.5; }
+
+    .fx { position: absolute; inset: 0; z-index: 1; pointer-events: none; display: none; }
+    .fx.active { display: block; }
+
+    /* —— 1 Ondas de tinta —— */
+    .fx-ondas .ripple {
+      position: absolute;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      animation: ripple 6s ease-out infinite;
+    }
+    .fx-ondas .r1 {
+      width: 120px; height: 120px; left: 12%; top: 30%;
+      border-color: rgba(0,174,239,0.45);
+    }
+    .fx-ondas .r2 {
+      width: 120px; height: 120px; left: 12%; top: 30%;
+      border-color: rgba(0,174,239,0.3);
+      animation-delay: 2s;
+    }
+    .fx-ondas .r3 {
+      width: 100px; height: 100px; right: 18%; bottom: 22%;
+      border-color: rgba(230,0,126,0.4);
+      animation-delay: 1s;
+    }
+    .fx-ondas .r4 {
+      width: 100px; height: 100px; right: 18%; bottom: 22%;
+      border-color: rgba(255,212,0,0.45);
+      animation-delay: 3s;
+    }
+    .fx-ondas .wash {
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(circle at 18% 38%, rgba(0,174,239,0.18), transparent 35%),
+        radial-gradient(circle at 78% 72%, rgba(230,0,126,0.12), transparent 32%);
+    }
+    @keyframes ripple {
+      0% { transform: scale(0.4); opacity: 0.8; }
+      100% { transform: scale(4.2); opacity: 0; }
+    }
+
+    /* —— 2 Líneas de escaneo —— */
+    .fx-scan .base {
+      position: absolute; inset: 0;
+      background:
+        linear-gradient(160deg, #f4f9fc, #faf6f9 50%, #fffdf3);
+    }
+    .fx-scan .beam {
+      position: absolute;
+      left: -20%;
+      width: 40%;
+      height: 100%;
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(0,174,239,0.08),
+        rgba(255,255,255,0.55),
+        rgba(230,0,126,0.1),
+        transparent
+      );
+      animation: scan 5.5s ease-in-out infinite;
+      filter: blur(8px);
+    }
+    .fx-scan .line {
+      position: absolute;
+      left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--cyan), var(--magenta), var(--yellow), transparent);
+      opacity: 0.55;
+      animation: scan-line 5.5s ease-in-out infinite;
+      box-shadow: 0 0 18px rgba(0,174,239,0.35);
+    }
+    @keyframes scan {
+      0% { transform: translateX(-30%); }
+      100% { transform: translateX(280%); }
+    }
+    @keyframes scan-line {
+      0% { top: 8%; opacity: 0; }
+      15% { opacity: 0.7; }
+      85% { opacity: 0.7; }
+      100% { top: 92%; opacity: 0; }
+    }
+
+    /* —— 3 Puntos CMYK orbitando —— */
+    .fx-orbita .orbit {
+      position: absolute;
+      width: 160px; height: 160px;
+      right: 12%;
+      top: 18%;
+      animation: spin 14s linear infinite;
+    }
+    .fx-orbita .orbit-2 {
+      width: 110px; height: 110px;
+      left: 14%;
+      bottom: 20%;
+      animation-duration: 10s;
+      animation-direction: reverse;
+      opacity: 0.85;
+    }
+    .fx-orbita .dot {
+      position: absolute;
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    }
+    .fx-orbita .d-c { background: var(--cyan); top: 0; left: 50%; transform: translate(-50%, -50%); }
+    .fx-orbita .d-m { background: var(--magenta); top: 50%; right: 0; transform: translate(50%, -50%); }
+    .fx-orbita .d-y { background: var(--yellow); bottom: 0; left: 50%; transform: translate(-50%, 50%); }
+    .fx-orbita .d-k { background: var(--ink); top: 50%; left: 0; transform: translate(-50%, -50%); }
+    .fx-orbita .glow {
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(circle at 75% 25%, rgba(0,174,239,0.12), transparent 40%),
+        radial-gradient(circle at 20% 75%, rgba(230,0,126,0.1), transparent 40%);
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* —— 4 Shimmer —— */
+    .fx-shimmer .base {
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse at 20% 20%, rgba(0,174,239,0.15), transparent 45%),
+        radial-gradient(ellipse at 80% 70%, rgba(230,0,126,0.12), transparent 40%),
+        #f7f8fa;
+    }
+    .fx-shimmer .shine {
+      position: absolute;
+      inset: -40%;
+      background: linear-gradient(
+        115deg,
+        transparent 35%,
+        rgba(255,255,255,0.15) 42%,
+        rgba(255,255,255,0.65) 50%,
+        rgba(255,255,255,0.15) 58%,
+        transparent 65%
+      );
+      animation: shimmer 7s ease-in-out infinite;
+    }
+    @keyframes shimmer {
+      0% { transform: translateX(-40%) translateY(-10%); }
+      100% { transform: translateX(40%) translateY(10%); }
+    }
+
+    /* —— 5 Formas orgánicas (morph) —— */
+    .fx-morph .blob {
+      position: absolute;
+      width: min(48vw, 340px);
+      height: min(48vw, 340px);
+      filter: blur(40px);
+      opacity: 0.7;
+      animation: morph 10s ease-in-out infinite;
+    }
+    .fx-morph .b1 {
+      top: 5%; left: 5%;
+      background: rgba(0,174,239,0.55);
+      border-radius: 60% 40% 55% 45% / 45% 55% 40% 60%;
+    }
+    .fx-morph .b2 {
+      top: 20%; right: 5%;
+      background: rgba(230,0,126,0.45);
+      border-radius: 40% 60% 45% 55% / 55% 40% 60% 45%;
+      animation-delay: -3s;
+      animation-duration: 12s;
+    }
+    .fx-morph .b3 {
+      bottom: 0; left: 30%;
+      background: rgba(255,212,0,0.5);
+      border-radius: 50% 50% 40% 60% / 40% 60% 50% 50%;
+      animation-delay: -6s;
+      animation-duration: 11s;
+    }
+    @keyframes morph {
+      0%, 100% {
+        border-radius: 60% 40% 55% 45% / 45% 55% 40% 60%;
+        transform: translate(0, 0) rotate(0deg);
+      }
+      33% {
+        border-radius: 40% 60% 40% 60% / 60% 40% 60% 40%;
+        transform: translate(4%, 6%) rotate(8deg);
+      }
+      66% {
+        border-radius: 55% 45% 60% 40% / 50% 55% 45% 50%;
+        transform: translate(-3%, 4%) rotate(-6deg);
+      }
+    }
+
+    /* —— 6 Parallax scroll —— */
+    .fx-parallax .layer {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(50px);
+      transition: transform 0.15s ease-out;
+    }
+    .fx-parallax .l1 {
+      width: 280px; height: 280px;
+      top: 10%; left: 10%;
+      background: rgba(0,174,239,0.4);
+    }
+    .fx-parallax .l2 {
+      width: 240px; height: 240px;
+      top: 25%; right: 12%;
+      background: rgba(230,0,126,0.32);
+    }
+    .fx-parallax .l3 {
+      width: 260px; height: 260px;
+      bottom: 8%; left: 35%;
+      background: rgba(255,212,0,0.38);
+    }
+    .fx-parallax .hint {
+      position: absolute;
+      bottom: 1rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 6;
+      font-size: 0.8rem;
+      color: #5a6068;
+      background: rgba(255,255,255,0.8);
+      padding: 0.4rem 0.85rem;
+      border-radius: 999px;
+      pointer-events: none;
+    }
+
+    .note {
+      margin-top: 1rem;
+      font-size: 0.85rem;
+      color: #6a7078;
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <h1>Prototipo de efectos de fondo</h1>
+    <p class="intro">
+      Compara cada opción en vivo. Esto no cambia tu sitio: es solo una vista previa.
+      Elige la que más te guste (o una mezcla) y la implementamos después.
+    </p>
+
+    <div class="tabs" role="tablist">
+      <button class="tab active" data-fx="ondas" type="button">1 · Ondas de tinta</button>
+      <button class="tab" data-fx="scan" type="button">2 · Líneas de escaneo</button>
+      <button class="tab" data-fx="orbita" type="button">3 · Puntos orbitando</button>
+      <button class="tab" data-fx="shimmer" type="button">4 · Shimmer / brillo</button>
+      <button class="tab" data-fx="morph" type="button">5 · Formas orgánicas</button>
+      <button class="tab" data-fx="parallax" type="button">6 · Parallax</button>
+    </div>
+
+    <div class="stage-wrap">
+      <div class="stage" id="stage">
+        <!-- 1 -->
+        <div class="fx fx-ondas active" data-panel="ondas">
+          <div class="wash"></div>
+          <span class="ripple r1"></span>
+          <span class="ripple r2"></span>
+          <span class="ripple r3"></span>
+          <span class="ripple r4"></span>
+        </div>
+
+        <!-- 2 -->
+        <div class="fx fx-scan" data-panel="scan">
+          <div class="base"></div>
+          <div class="beam"></div>
+          <div class="line"></div>
+        </div>
+
+        <!-- 3 -->
+        <div class="fx fx-orbita" data-panel="orbita">
+          <div class="glow"></div>
+          <div class="orbit">
+            <span class="dot d-c"></span>
+            <span class="dot d-m"></span>
+            <span class="dot d-y"></span>
+            <span class="dot d-k"></span>
+          </div>
+          <div class="orbit orbit-2">
+            <span class="dot d-c"></span>
+            <span class="dot d-m"></span>
+            <span class="dot d-y"></span>
+            <span class="dot d-k"></span>
+          </div>
+        </div>
+
+        <!-- 4 -->
+        <div class="fx fx-shimmer" data-panel="shimmer">
+          <div class="base"></div>
+          <div class="shine"></div>
+        </div>
+
+        <!-- 5 -->
+        <div class="fx fx-morph" data-panel="morph">
+          <span class="blob b1"></span>
+          <span class="blob b2"></span>
+          <span class="blob b3"></span>
+        </div>
+
+        <!-- 6 -->
+        <div class="fx fx-parallax" data-panel="parallax">
+          <span class="layer l1" data-depth="0.04"></span>
+          <span class="layer l2" data-depth="0.08"></span>
+          <span class="layer l3" data-depth="0.05"></span>
+          <div class="hint">Mueve el mouse sobre esta área</div>
+        </div>
+
+        <div class="stage-ui">
+          <div class="fake-logo">aleph <span>impresores</span></div>
+          <div class="fake-card">
+            <p id="desc">Círculos que se expanden como gotas de tinta en agua. Suave y muy “imprenta”.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="meta">
+        <h2 id="title">1 · Ondas de tinta</h2>
+        <p id="detail">Ideal como complemento del fondo actual. No tapa el contenido y refuerza la idea de tinta líquida.</p>
+      </div>
+    </div>
+
+    <p class="note">
+      Abre este archivo en:
+      <strong>http://localhost:5173/prototipo-fondos.html</strong>
+      (con <code>npm run dev</code> activo).
+    </p>
+  </div>
+
+  <script>
+    const copy = {
+      ondas: {
+        title: "1 · Ondas de tinta",
+        desc: "Círculos que se expanden como gotas de tinta en agua. Suave y muy “imprenta”.",
+        detail: "Ideal como complemento del fondo actual. No tapa el contenido y refuerza la idea de tinta líquida."
+      },
+      scan: {
+        title: "2 · Líneas de escaneo",
+        desc: "Una franja de luz recorre la pantalla, como un plotter o un escáner de impresión.",
+        detail: "Se siente técnico y moderno. Funciona bien si quieres un toque “máquina de imprimir”."
+      },
+      orbita: {
+        title: "3 · Puntos CMYK orbitando",
+        desc: "Los cuatro puntos del logo giran lento en el fondo, sin molestar.",
+        detail: "Conexión directa con la marca. Mejor en esquinas y con opacidad moderada."
+      },
+      shimmer: {
+        title: "4 · Shimmer / brillo",
+        desc: "Un destello diagonal cruza el fondo cada cierto tiempo.",
+        detail: "Elegante y premium. Muy sutil: da vida sin saturar de color."
+      },
+      morph: {
+        title: "5 · Formas orgánicas",
+        desc: "Manchas de color que cambian de forma, no solo de posición.",
+        detail: "El más “vivo” y artístico. Combina muy bien con el fondo que ya te gustó."
+      },
+      parallax: {
+        title: "6 · Parallax",
+        desc: "Las luces de color se mueven con el mouse (en el sitio real sería con el scroll).",
+        detail: "Da profundidad. En la web real lo ataríamos al scroll de la página."
+      }
+    };
+
+    const tabs = document.querySelectorAll(".tab");
+    const panels = document.querySelectorAll(".fx");
+
+    tabs.forEach((tab) => {
+      tab.addEventListener("click", () => {
+        const id = tab.dataset.fx;
+        tabs.forEach((t) => t.classList.toggle("active", t === tab));
+        panels.forEach((p) => p.classList.toggle("active", p.dataset.panel === id));
+        document.getElementById("title").textContent = copy[id].title;
+        document.getElementById("desc").textContent = copy[id].desc;
+        document.getElementById("detail").textContent = copy[id].detail;
+      });
+    });
+
+    const stage = document.getElementById("stage");
+    stage.addEventListener("mousemove", (e) => {
+      const panel = document.querySelector('.fx-parallax.active');
+      if (!panel) return;
+      const rect = stage.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width - 0.5;
+      const y = (e.clientY - rect.top) / rect.height - 0.5;
+      panel.querySelectorAll(".layer").forEach((layer) => {
+        const d = parseFloat(layer.dataset.depth);
+        layer.style.transform = `translate(${x * d * 400}px, ${y * d * 400}px)`;
+      });
+    });
+  </script>
+</body>
+</html>

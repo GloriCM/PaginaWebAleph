@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Paleta — Azules cielo</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Segoe UI", system-ui, sans-serif;
+      min-height: 100vh;
+      color: #1c1f24;
+      background:
+        radial-gradient(ellipse 50% 40% at 20% 10%, rgba(0,174,239,0.12), transparent 55%),
+        #f4f6f9;
+      padding: 1.5rem 1.25rem 3rem;
+    }
+
+    .shell { max-width: 900px; margin: 0 auto; }
+
+    h1 { font-size: 1.45rem; margin-bottom: 0.35rem; }
+    .intro { color: #5a6068; margin-bottom: 1.5rem; max-width: 48ch; line-height: 1.45; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .swatch {
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid rgba(28,31,36,0.08);
+      background: #fff;
+      box-shadow: 0 8px 24px rgba(28,31,36,0.06);
+    }
+
+    .swatch__color {
+      height: 110px;
+    }
+
+    .swatch__info {
+      padding: 0.85rem 0.9rem 1rem;
+    }
+
+    .swatch__letter {
+      font-size: 0.75rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      color: #7a8490;
+      margin-bottom: 0.2rem;
+    }
+
+    .swatch__name {
+      font-weight: 700;
+      font-size: 0.95rem;
+      margin-bottom: 0.2rem;
+    }
+
+    .swatch__hex {
+      font-family: ui-monospace, Consolas, monospace;
+      font-size: 0.82rem;
+      color: #5a6068;
+    }
+
+    .preview {
+      background: rgba(255,255,255,0.7);
+      border: 1px solid rgba(255,255,255,0.9);
+      border-radius: 22px;
+      padding: 1.5rem;
+      box-shadow: 0 10px 30px rgba(28,31,36,0.06);
+    }
+
+    .preview h2 {
+      font-size: 1.05rem;
+      margin-bottom: 0.35rem;
+    }
+
+    .preview p {
+      color: #5a6068;
+      font-size: 0.9rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .btns {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 170px;
+      padding: 0.9rem 1.5rem;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.5);
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.9rem;
+      text-decoration: none;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+      cursor: default;
+    }
+
+    .btn-a { background: linear-gradient(160deg, #9fe0f8, #7dd3f5 55%, #5ec4ea); }
+    .btn-b { background: linear-gradient(160deg, #5ec8f0, #00aeef 55%, #0096d1); }
+    .btn-c { background: linear-gradient(160deg, #7dd3f8, #38bdf8 55%, #0ea5e9); }
+    .btn-d { background: linear-gradient(160deg, #38bdf8, #0ea5e9 55%, #0284c7); }
+    .btn-e { background: linear-gradient(160deg, #c7eef9, #a5e4f7 55%, #7dd3f0); color: #0b4f66; }
+
+    .note {
+      margin-top: 1.25rem;
+      font-size: 0.85rem;
+      color: #6a7078;
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <h1>Paleta de azules cielo</h1>
+    <p class="intro">Compara los tonos. Luego dime la letra (A–E) y lo aplicamos al botón.</p>
+
+    <div class="grid">
+      <article class="swatch">
+        <div class="swatch__color" style="background:#7DD3F5"></div>
+        <div class="swatch__info">
+          <div class="swatch__letter">A</div>
+          <div class="swatch__name">Cielo claro</div>
+          <div class="swatch__hex">#7DD3F5</div>
+        </div>
+      </article>
+
+      <article class="swatch">
+        <div class="swatch__color" style="background:#00AEEF"></div>
+        <div class="swatch__info">
+          <div class="swatch__letter">B · actual</div>
+          <div class="swatch__name">Cielo Aleph</div>
+          <div class="swatch__hex">#00AEEF</div>
+        </div>
+      </article>
+
+      <article class="swatch">
+        <div class="swatch__color" style="background:#38BDF8"></div>
+        <div class="swatch__info">
+          <div class="swatch__letter">C</div>
+          <div class="swatch__name">Cielo medio</div>
+          <div class="swatch__hex">#38BDF8</div>
+        </div>
+      </article>
+
+      <article class="swatch">
+        <div class="swatch__color" style="background:#0EA5E9"></div>
+        <div class="swatch__info">
+          <div class="swatch__letter">D</div>
+          <div class="swatch__name">Cielo profundo</div>
+          <div class="swatch__hex">#0EA5E9</div>
+        </div>
+      </article>
+
+      <article class="swatch">
+        <div class="swatch__color" style="background:#A5E4F7"></div>
+        <div class="swatch__info">
+          <div class="swatch__letter">E</div>
+          <div class="swatch__name">Cielo pastel</div>
+          <div class="swatch__hex">#A5E4F7</div>
+        </div>
+      </article>
+    </div>
+
+    <div class="preview">
+      <h2>Así se verían en el botón</h2>
+      <p>Misma forma, distinto azul.</p>
+      <div class="btns">
+        <span class="btn btn-a">A · Enviar mensaje</span>
+        <span class="btn btn-b">B · Enviar mensaje</span>
+        <span class="btn btn-c">C · Enviar mensaje</span>
+        <span class="btn btn-d">D · Enviar mensaje</span>
+        <span class="btn btn-e">E · Enviar mensaje</span>
+      </div>
+    </div>
+
+    <p class="note">
+      Ábrelo en: <strong>http://localhost:5173/prototipo-azules.html</strong>
+    </p>
+  </div>
+</body>
+</html>

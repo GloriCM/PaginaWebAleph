@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Prototipo — Barra de navegación</title>
+  <style>
+    :root {
+      --cyan: #00aeef;
+      --cielo: #38bdf8;
+      --cielo-deep: #0ea5e9;
+      --magenta: #e91e8c;
+      --ink: #1c1f24;
+      --muted: #5a6068;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Segoe UI", system-ui, sans-serif;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse 50% 40% at 12% 18%, rgba(0,174,239,0.16), transparent 55%),
+        radial-gradient(ellipse 45% 35% at 88% 25%, rgba(233,30,140,0.1), transparent 50%),
+        radial-gradient(ellipse 40% 35% at 55% 90%, rgba(255,212,0,0.14), transparent 50%),
+        #f6f8fb;
+      padding: 1.5rem 1rem 3rem;
+    }
+
+    .shell { max-width: 1100px; margin: 0 auto; }
+
+    h1 { font-size: 1.4rem; margin-bottom: 0.35rem; }
+    .intro { color: var(--muted); margin-bottom: 1.25rem; max-width: 52ch; line-height: 1.45; }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      margin-bottom: 1rem;
+    }
+
+    .tab {
+      border: 1px solid #d5d8de;
+      background: rgba(255,255,255,0.85);
+      color: #3a4048;
+      border-radius: 999px;
+      padding: 0.5rem 0.85rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .tab:hover { border-color: var(--cielo); color: var(--cielo-deep); }
+    .tab.active {
+      background: var(--cielo);
+      border-color: var(--cielo);
+      color: #fff;
+    }
+
+    .stage-wrap {
+      border-radius: 22px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.85);
+      background: rgba(255,255,255,0.28);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 12px 36px rgba(28,31,36,0.07);
+    }
+
+    .stage {
+      min-height: 240px;
+      padding: 2rem 1.25rem 1.5rem;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+    }
+
+    .panel { display: none; width: 100%; }
+    .panel.active { display: block; }
+
+    .meta {
+      padding: 1rem 1.25rem 1.25rem;
+      border-top: 1px solid rgba(28,31,36,0.08);
+      background: rgba(255,255,255,0.55);
+    }
+
+    .meta h2 { font-size: 1.05rem; margin-bottom: 0.35rem; }
+    .meta p { font-size: 0.9rem; color: var(--muted); line-height: 1.5; }
+    .note { margin-top: 1rem; font-size: 0.85rem; color: #6a7078; }
+
+    .bar {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      width: 100%;
+      max-width: 980px;
+      margin: 0 auto;
+      min-height: 72px;
+      padding: 0.5rem 1rem 0.5rem 1.15rem;
+      background: rgba(255,255,255,0.9);
+      backdrop-filter: blur(18px);
+      border: 1px solid rgba(255,255,255,0.95);
+      border-radius: 999px;
+      box-shadow: 0 10px 32px rgba(0,144,184,0.1);
+    }
+
+    .logo {
+      flex-shrink: 0;
+      font-weight: 800;
+      font-size: 1.15rem;
+      letter-spacing: -0.03em;
+      line-height: 1;
+    }
+
+    .logo small {
+      display: block;
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: var(--magenta);
+      margin-top: 2px;
+    }
+
+    .dots {
+      display: inline-flex;
+      gap: 3px;
+      margin-left: 4px;
+      vertical-align: middle;
+    }
+
+    .dots i {
+      width: 6px; height: 6px; border-radius: 50%; display: inline-block;
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      flex: 1;
+    }
+
+    .nav a {
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #4f5660;
+      padding: 0.5rem 0.9rem;
+      border-radius: 999px;
+      white-space: nowrap;
+      transition: 0.2s ease;
+    }
+
+    /* Actual */
+    .actual .nav { justify-content: flex-end; }
+    .actual .nav a.active {
+      color: var(--magenta);
+      background: rgba(233,30,140,0.1);
+      border: 1px solid rgba(233,30,140,0.22);
+    }
+    .actual .nav a:not(.active) {
+      background: rgba(255,255,255,0.7);
+      border: 1px solid rgba(255,255,255,0.8);
+      box-shadow: 0 2px 8px rgba(28,31,36,0.04);
+    }
+
+    /* 1 */
+    .op1 .nav { justify-content: center; }
+    .op1 .nav a { background: transparent; border: none; }
+    .op1 .nav a:hover { color: var(--cielo-deep); }
+    .op1 .nav a.active {
+      color: var(--cielo-deep);
+      background: rgba(56,189,248,0.14);
+      border: 1px solid rgba(56,189,248,0.28);
+    }
+
+    /* 2 */
+    .op2 .nav { justify-content: center; gap: 0.5rem; }
+    .op2 .nav a {
+      background: transparent; border: none; box-shadow: none;
+      border-radius: 0; padding: 0.4rem 0.65rem; position: relative;
+    }
+    .op2 .nav a:hover { color: var(--cielo-deep); }
+    .op2 .nav a.active { color: var(--cielo-deep); font-weight: 700; }
+    .op2 .nav a.active::after {
+      content: "";
+      position: absolute; left: 0.65rem; right: 0.65rem; bottom: 0;
+      height: 2px; background: var(--cielo); border-radius: 2px;
+    }
+
+    /* 3 */
+    .op3 .bar { min-height: 58px; padding: 0.35rem 0.85rem 0.35rem 1rem; max-width: 860px; }
+    .op3 .logo { font-size: 1rem; }
+    .op3 .nav { justify-content: center; }
+    .op3 .nav a { font-size: 0.82rem; padding: 0.4rem 0.7rem; background: transparent; border: none; }
+    .op3 .nav a.active {
+      color: #fff;
+      background: linear-gradient(160deg, #7dd3f8, #38bdf8 55%, #0ea5e9);
+      box-shadow: 0 4px 14px rgba(56,189,248,0.3);
+    }
+
+    /* 4 */
+    .op4 .nav { justify-content: center; }
+    .op4 .nav a { background: transparent; border: none; }
+    .op4 .nav a.active {
+      color: var(--cielo-deep);
+      background: rgba(56,189,248,0.14);
+      border: 1px solid rgba(56,189,248,0.28);
+    }
+    .cta-text {
+      flex-shrink: 0; color: var(--cielo-deep); font-weight: 700;
+      font-size: 0.88rem; text-decoration: none; padding-right: 0.35rem; white-space: nowrap;
+    }
+
+    /* 5 · Dos cápsulas */
+    .op5-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      max-width: 980px;
+      margin: 0 auto;
+    }
+    .op5 .bar { flex: 0 0 auto; width: auto; min-width: 160px; padding-right: 1.25rem; }
+    .op5-nav {
+      display: flex;
+      gap: 0.25rem;
+      padding: 0.45rem;
+      background: rgba(255,255,255,0.9);
+      backdrop-filter: blur(18px);
+      border: 1px solid rgba(255,255,255,0.95);
+      border-radius: 999px;
+      box-shadow: 0 10px 32px rgba(0,144,184,0.1);
+    }
+    .op5-nav a {
+      text-decoration: none; font-size: 0.88rem; font-weight: 500;
+      color: #4f5660; padding: 0.55rem 0.95rem; border-radius: 999px;
+    }
+    .op5-nav a.active {
+      color: #fff;
+      background: linear-gradient(160deg, #7dd3f8, #38bdf8 55%, #0ea5e9);
+    }
+
+    /* 6 · Distribuidos */
+    .op6 .nav { justify-content: space-evenly; }
+    .op6 .nav a { background: transparent; border: none; }
+    .op6 .nav a:hover { color: var(--cielo-deep); }
+    .op6 .nav a.active {
+      color: var(--cielo-deep);
+      font-weight: 700;
+      background: rgba(56,189,248,0.12);
+    }
+
+    /* 7 · Franja CMYK */
+    .op7 .bar {
+      border-radius: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .op7 .bar::before {
+      content: "";
+      position: absolute; left: 0; right: 0; top: 0; height: 3px;
+      background: linear-gradient(90deg, #00aeef, #e91e8c, #ffd400, #1a1a1a);
+    }
+    .op7 .nav { justify-content: center; padding-top: 0.15rem; }
+    .op7 .nav a { background: transparent; border: none; }
+    .op7 .nav a.active {
+      color: var(--cielo-deep);
+      font-weight: 700;
+      background: rgba(56,189,248,0.14);
+      border: 1px solid rgba(56,189,248,0.25);
+    }
+
+    /* 8 · Editorial */
+    .op8 .bar {
+      background: transparent;
+      border: none;
+      box-shadow: none;
+      backdrop-filter: none;
+      border-bottom: 1px solid rgba(28,31,36,0.1);
+      border-radius: 0;
+      max-width: 1000px;
+      padding: 0.75rem 0;
+    }
+    .op8 .nav { justify-content: flex-end; gap: 0.75rem; }
+    .op8 .nav a {
+      background: transparent; border: none; box-shadow: none;
+      font-size: 0.92rem; padding: 0.35rem 0.2rem; border-radius: 0;
+    }
+    .op8 .nav a.active {
+      color: var(--cielo-deep);
+      font-weight: 700;
+      box-shadow: inset 0 -2px 0 var(--cielo);
+    }
+
+    /* 9 · Píldora activa sola */
+    .op9 .nav { justify-content: center; gap: 0.35rem; }
+    .op9 .nav a {
+      background: transparent; border: none; color: #6a7280;
+      padding: 0.55rem 1rem;
+    }
+    .op9 .nav a:hover { color: var(--ink); }
+    .op9 .nav a.active {
+      color: var(--ink);
+      background: #fff;
+      border: 1px solid rgba(56,189,248,0.35);
+      box-shadow: 0 6px 18px rgba(56,189,248,0.18);
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <h1>Prototipo — Barra de navegación</h1>
+    <p class="intro">Más opciones para comparar. Esto no cambia tu sitio; elige y luego la implementamos.</p>
+
+    <div class="tabs">
+      <button class="tab active" type="button" data-id="actual">Actual</button>
+      <button class="tab" type="button" data-id="op1">1 · Centrada + azul</button>
+      <button class="tab" type="button" data-id="op2">2 · Links limpios</button>
+      <button class="tab" type="button" data-id="op3">3 · Compacta</button>
+      <button class="tab" type="button" data-id="op4">4 · Cotizar →</button>
+      <button class="tab" type="button" data-id="op5">5 · Dos cápsulas</button>
+      <button class="tab" type="button" data-id="op6">6 · Distribuidos</button>
+      <button class="tab" type="button" data-id="op7">7 · Franja CMYK</button>
+      <button class="tab" type="button" data-id="op8">8 · Editorial</button>
+      <button class="tab" type="button" data-id="op9">9 · Píldora activa</button>
+    </div>
+
+    <div class="stage-wrap">
+      <div class="stage">
+        <div class="panel active" data-panel="actual">
+          <div class="bar actual">
+            <div class="logo">aleph<small>impresores <span class="dots"><i style="background:#00aeef"></i><i style="background:#e91e8c"></i><i style="background:#ffd400"></i><i style="background:#1a1a1a"></i></span></small></div>
+            <nav class="nav">
+              <a class="active" href="#">Inicio</a><a href="#">About</a><a href="#">Servicios</a><a href="#">Catálogo</a><a href="#">Contacto</a>
+            </nav>
+          </div>
+        </div>
+
+        <div class="panel" data-panel="op1">
+          <div class="bar op1">
+            <div class="logo">aleph<small>impresores <span class="dots"><i style="background:#00aeef"></i><i style="background:#e91e8c"></i><i style="background:#ffd400"></i><i style="background:#1a1a1a"></i></span></small></div>
+            <nav class="nav">
+              <a class="active" href="#">Inicio</a><a href="#">About</a><a href="#">Servicios</a><a href="#">Catálogo</a><a href="#">Contacto</a>
+            </nav>
+          </div>
+        </div>
+
+        <div class="panel" data-panel="op2">
+          <div class="bar op2">
+            <div class="logo">aleph<small>impresores <span class="dots"><i style="background:#00aeef"></i><i style="background:#e91e8c"></i><i style="background:#ffd400"></i><i style="background:#1a1a1a"></i></span></small></div>
+            <nav class="nav">
+              <a class="active" href="#">Inicio</a><a href="#">About</a><a href="#">Servicios</a><a href="#">Catálogo</a><a href="#">Contacto</a>
+            </nav>
+          </div>
+        </div>
+
+        <div class="panel" data-panel="op3">
+          <div class="bar op3">
+            <div class="logo">aleph<small>impresores <span class="dots"><i style="background:#00aeef"></i><i style="background:#e91e8c"></i><i style="background:#ffd400"></i><i style="background:#1a1a1a"></i></span></small></div>
+            <nav class="nav">
+              <a class="active" href="#">Inicio</a><a href="#">About</a><a href="#">Servicios</a><a href="#">Catálogo</a><a href="#">Contacto</a>
+            </nav>
+          </div>
+        </div>
+
+        <div class="panel" data-panel="op4">
+          <div class="bar op4">
+            <div class="logo">aleph<small>impresores <span class="dots"><i style="background:#00aeef"></i><i style="background:#e91e8c"></i><i style="background:#ffd400"></i><i style="background:#1a1a1a"></i></span></small></div>
+            <nav class="nav">
+              <a class="active" href="#">Inicio</a><a href="#">About</a><a href="#">Servicios</a><a href="#">Catálogo</a><a href="#">Contacto</a>
+            </nav>
+            <a class="cta-text" href="#">Cotizar →</a>
+          </div>
+        </div>
+
+        <div class="panel" data-panel="op5">
+          <div class="op5-wrap op5">
+            <div class="bar">
+              <div class="logo">aleph<small>impresores <span class="dots"><i style="background:#00aeef"></i><i style="background:#e91e8c"></i><i style="background:#ffd400"></i><i style="background:#1a1a1a"></i></span></small></div>
+            </div>
+            <nav class="op5-nav">
+              <a class="active" href="#">Inicio</a><a href="#">About</a><a href="#">Servicios</a><a href="#">Catálogo</a><a href="#">Contacto</a>
+            </nav>
+          </div>
+        </div>
+
+        <div class="panel" data-panel="op6">
+          <div class="bar op6">
+            <div class="logo">aleph<small>impresores <span class="dots"><i style="background:#00aeef"></i><i style="background:#e91e8c"></i><i style="background:#ffd400"></i><i style="background:#1a1a1a"></i></span></small></div>
+            <nav class="nav">
+              <a class="active" href="#">Inicio</a><a href="#">About</a><a href="#">Servicios</a><a href="#">Catálogo</a><a href="#">Contacto</a>
+            </nav>
+          </div>
+        </div>
+
+        <div class="panel" data-panel="op7">
+          <div class="bar op7">
+            <div class="logo">aleph<small>impresores <span class="dots"><i style="background:#00aeef"></i><i style="background:#e91e8c"></i><i style="background:#ffd400"></i><i style="background:#1a1a1a"></i></span></small></div>
+            <nav class="nav">
+              <a class="active" href="#">Inicio</a><a href="#">About</a><a href="#">Servicios</a><a href="#">Catálogo</a><a href="#">Contacto</a>
+            </nav>
+          </div>
+        </div>
+
+        <div class="panel" data-panel="op8">
+          <div class="bar op8">
+            <div class="logo">aleph<small>impresores <span class="dots"><i style="background:#00aeef"></i><i style="background:#e91e8c"></i><i style="background:#ffd400"></i><i style="background:#1a1a1a"></i></span></small></div>
+            <nav class="nav">
+              <a class="active" href="#">Inicio</a><a href="#">About</a><a href="#">Servicios</a><a href="#">Catálogo</a><a href="#">Contacto</a>
+            </nav>
+          </div>
+        </div>
+
+        <div class="panel" data-panel="op9">
+          <div class="bar op9">
+            <div class="logo">aleph<small>impresores <span class="dots"><i style="background:#00aeef"></i><i style="background:#e91e8c"></i><i style="background:#ffd400"></i><i style="background:#1a1a1a"></i></span></small></div>
+            <nav class="nav">
+              <a class="active" href="#">Inicio</a><a href="#">About</a><a href="#">Servicios</a><a href="#">Catálogo</a><a href="#">Contacto</a>
+            </nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="meta">
+        <h2 id="title">Actual</h2>
+        <p id="detail">Menú a la derecha, activo magenta y espacio vacío donde estaba Cotizar.</p>
+      </div>
+    </div>
+
+    <p class="note">Ábrelo en: <strong>http://localhost:5173/prototipo-barra.html</strong></p>
+  </div>
+
+  <script>
+    const copy = {
+      actual: { title: "Actual", detail: "Menú a la derecha, activo magenta y espacio vacío donde estaba Cotizar." },
+      op1: { title: "1 · Centrada + azul", detail: "Links al centro y activo en azul cielo C. Corrige el desbalance." },
+      op2: { title: "2 · Links limpios", detail: "Sin pastillas: solo texto y subrayado azul en el activo." },
+      op3: { title: "3 · Compacta", detail: "Barra más baja y activo relleno azul cielo." },
+      op4: { title: "4 · Cotizar →", detail: "Centrada + azul, con CTA sutil en texto." },
+      op5: { title: "5 · Dos cápsulas", detail: "Logo en una cápsula y menú en otra. Muy moderno y equilibrado." },
+      op6: { title: "6 · Distribuidos", detail: "Los links ocupan todo el espacio disponible de forma pareja." },
+      op7: { title: "7 · Franja CMYK", detail: "Cápsula con franja de marca arriba y menú centrado." },
+      op8: { title: "8 · Editorial", detail: "Sin cápsula: línea inferior limpia, estilo revista." },
+      op9: { title: "9 · Píldora activa", detail: "Solo el ítem activo se ve como pastilla blanca; el resto es texto." }
+    };
+
+    document.querySelectorAll(".tab").forEach((tab) => {
+      tab.addEventListener("click", () => {
+        const id = tab.dataset.id;
+        document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("active", t === tab));
+        document.querySelectorAll(".panel").forEach((p) => p.classList.toggle("active", p.dataset.panel === id));
+        document.getElementById("title").textContent = copy[id].title;
+        document.getElementById("detail").textContent = copy[id].detail;
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Prototipo — Especialidades (más opciones)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --sky: #38bdf8;
+      --magenta: #e91e8c;
+      --yellow: #ffd400;
+      --ink: #1c1f24;
+      --muted: #5a6068;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Poppins, system-ui, sans-serif;
+      color: var(--ink);
+      min-height: 100vh;
+      background:
+        radial-gradient(ellipse 50% 40% at 10% 15%, rgba(0,174,239,0.22), transparent 55%),
+        radial-gradient(ellipse 45% 35% at 90% 20%, rgba(230,0,126,0.16), transparent 50%),
+        radial-gradient(ellipse 45% 40% at 50% 95%, rgba(255,212,0,0.2), transparent 55%),
+        #f4f6f8;
+    }
+
+    .shell { max-width: 1000px; margin: 0 auto; padding: 1.5rem 1.25rem 3rem; }
+
+    h1 {
+      font-family: "Playfair Display", Georgia, serif;
+      font-size: 1.55rem;
+      margin-bottom: 0.35rem;
+    }
+
+    .intro {
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin-bottom: 1rem;
+      max-width: 64ch;
+    }
+
+    .nota {
+      display: inline-block;
+      margin-bottom: 1.35rem;
+      padding: 0.55rem 0.9rem;
+      border-radius: 999px;
+      background: rgba(56,189,248,0.14);
+      border: 1px solid rgba(56,189,248,0.3);
+      color: #0284c7;
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-bottom: 0.85rem;
+    }
+
+    .tab {
+      border: 1px solid #d5d8de;
+      background: rgba(255,255,255,0.8);
+      color: #3a4048;
+      border-radius: 999px;
+      padding: 0.48rem 0.85rem;
+      font-size: 0.76rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .tab:hover { border-color: var(--sky); color: var(--sky); }
+    .tab.active {
+      background: var(--sky);
+      border-color: var(--sky);
+      color: #fff;
+    }
+
+    .stage-wrap {
+      border-radius: 22px;
+      border: 1px solid rgba(255,255,255,0.85);
+      background: rgba(255,255,255,0.28);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 12px 36px rgba(28,31,36,0.08);
+      padding: 1.4rem 1.2rem 1.6rem;
+      min-height: 380px;
+    }
+
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    .titulo {
+      font-family: "Playfair Display", Georgia, serif;
+      text-align: center;
+      font-size: 1.6rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .vidrio {
+      background: rgba(255,255,255,0.45);
+      backdrop-filter: blur(18px);
+      border: 1px solid rgba(255,255,255,0.75);
+      border-radius: 24px;
+      padding: 1.85rem 1.4rem;
+      box-shadow:
+        0 1px 0 rgba(255,255,255,0.9) inset,
+        0 16px 40px rgba(28,31,36,0.08);
+      max-width: 880px;
+      margin: 0 auto;
+    }
+
+    .link-todo {
+      text-align: center;
+      margin-top: 1.25rem;
+      font-weight: 600;
+      font-size: 0.88rem;
+    }
+
+    /* E1 círculos */
+    .circulos {
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .circulo {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .circulo__img {
+      width: 128px;
+      height: 128px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.92);
+      border: 2px solid rgba(56,189,248,0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+      box-shadow: 0 8px 22px rgba(28,31,36,0.08);
+    }
+
+    .circulo--dest .circulo__img {
+      width: 148px;
+      height: 148px;
+      border-color: var(--sky);
+      box-shadow: 0 0 0 6px rgba(56,189,248,0.15);
+    }
+
+    .circulo__label {
+      font-size: 0.86rem;
+      font-weight: 600;
+      padding: 0.3rem 0.8rem;
+      background: rgba(255,255,255,0.75);
+      border-radius: 999px;
+    }
+
+    .iguales .circulo__img,
+    .iguales .circulo--dest .circulo__img {
+      width: 136px;
+      height: 136px;
+    }
+
+    /* E3 */
+    .lista-esp {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.9rem;
+    }
+
+    .item-esp {
+      text-align: center;
+      padding: 1.15rem 0.9rem;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.55);
+      border: 1px solid rgba(255,255,255,0.85);
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .item-esp__icon { font-size: 2rem; display: block; margin-bottom: 0.55rem; }
+    .item-esp strong { display: block; font-size: 0.92rem; margin-bottom: 0.2rem; }
+    .item-esp span { font-size: 0.76rem; color: var(--muted); }
+
+    /* E4 badges */
+    .hex-row {
+      display: flex;
+      justify-content: center;
+      gap: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    .hex { width: 140px; text-align: center; text-decoration: none; color: inherit; }
+
+    .hex__badge {
+      width: 84px;
+      height: 84px;
+      margin: 0 auto 0.75rem;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.9rem;
+      background: rgba(255,255,255,0.85);
+      border: 2px solid transparent;
+      transform: rotate(45deg);
+      box-shadow: 0 8px 20px rgba(28,31,36,0.07);
+    }
+
+    .hex__badge span { transform: rotate(-45deg); display: block; }
+    .hex--c .hex__badge { border-color: var(--sky); }
+    .hex--m .hex__badge { border-color: var(--magenta); }
+    .hex--y .hex__badge { border-color: var(--yellow); }
+
+    /* E5 carrusel */
+    .carrusel-esp {
+      display: flex;
+      gap: 1rem;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      padding-bottom: 0.35rem;
+    }
+
+    .carrusel-esp .circulo { flex: 0 0 150px; scroll-snap-align: start; }
+    .carrusel-esp .circulo__img { width: 130px; height: 130px; }
+
+    /* E6 editorial */
+    .editorial-esp {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 1rem;
+    }
+
+    .editorial-esp__main {
+      border-radius: 18px;
+      background: linear-gradient(145deg, rgba(56,189,248,0.2), rgba(255,255,255,0.7));
+      border: 1px solid rgba(255,255,255,0.9);
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .editorial-esp__main .big { font-size: 2.6rem; margin-bottom: 0.45rem; }
+    .editorial-esp__main h4 {
+      font-family: "Playfair Display", Georgia, serif;
+      font-size: 1.3rem;
+      margin-bottom: 0.3rem;
+    }
+    .editorial-esp__main p { font-size: 0.84rem; color: var(--muted); }
+
+    .editorial-esp__side { display: flex; flex-direction: column; gap: 0.65rem; }
+
+    .editorial-esp__mini {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      padding: 0.85rem 1rem;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.6);
+      border: 1px solid rgba(255,255,255,0.9);
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .editorial-esp__mini span { font-size: 1.45rem; }
+    .editorial-esp__mini strong { display: block; font-size: 0.88rem; }
+    .editorial-esp__mini em { font-style: normal; font-size: 0.72rem; color: var(--muted); }
+
+    /* E7 numerada */
+    .num-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+    }
+
+    .num-item {
+      text-decoration: none;
+      color: inherit;
+      padding: 1.2rem 1rem;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.55);
+      border: 1px solid rgba(255,255,255,0.9);
+    }
+
+    .num-item__n {
+      font-family: "Playfair Display", Georgia, serif;
+      font-size: 1.8rem;
+      color: var(--sky);
+      line-height: 1;
+      margin-bottom: 0.55rem;
+    }
+
+    .num-item strong { display: block; margin-bottom: 0.25rem; }
+    .num-item span { font-size: 0.78rem; color: var(--muted); }
+
+    /* E8 pills */
+    .pills {
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    .pill {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      padding: 0.85rem 1.1rem;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.7);
+      border: 1px solid rgba(255,255,255,0.95);
+      text-decoration: none;
+      color: inherit;
+      box-shadow: 0 6px 16px rgba(28,31,36,0.05);
+    }
+
+    .pill i { font-style: normal; font-size: 1.4rem; }
+    .pill strong { font-size: 0.95rem; }
+    .pill em { font-style: normal; font-size: 0.75rem; color: var(--muted); display: block; }
+
+    /* E9 overlay (como productos P5) */
+    .overlay-esp {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.85rem;
+    }
+
+    .ov {
+      position: relative;
+      border-radius: 18px;
+      overflow: hidden;
+      min-height: 190px;
+      text-decoration: none;
+      color: #fff;
+    }
+
+    .ov__bg {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3.2rem;
+      opacity: 0.32;
+    }
+
+    .ov--1 { background: #0c4a6e; }
+    .ov--2 { background: #831843; }
+    .ov--3 { background: #854d0e; }
+
+    .ov__content {
+      position: relative;
+      z-index: 1;
+      height: 100%;
+      min-height: 190px;
+      padding: 1.1rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      background: linear-gradient(to top, rgba(0,0,0,0.55), transparent 60%);
+    }
+
+    .ov__content h4 { font-size: 1.1rem; }
+    .ov__content span { font-size: 0.75rem; opacity: 0.85; margin-top: 0.2rem; }
+
+    /* E10 split vertical */
+    .split {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+      min-height: 220px;
+    }
+
+    .split a {
+      border-radius: 16px;
+      padding: 1.25rem 1rem;
+      text-decoration: none;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      min-height: 220px;
+    }
+
+    .split a span { font-size: 2rem; margin-bottom: auto; }
+    .split a strong { font-size: 1.05rem; }
+    .split a em { font-style: normal; font-size: 0.78rem; opacity: 0.9; margin-top: 0.25rem; }
+
+    .split a:nth-child(1) { background: linear-gradient(160deg, #38bdf8, #0284c7); }
+    .split a:nth-child(2) { background: linear-gradient(160deg, #e91e8c, #be185d); }
+    .split a:nth-child(3) { background: linear-gradient(160deg, #f5c842, #ca8a04); color: #1c1f24; }
+
+    /* E11 underline */
+    .under {
+      display: flex;
+      justify-content: center;
+      gap: 2.5rem;
+      flex-wrap: wrap;
+      text-align: center;
+    }
+
+    .under a {
+      text-decoration: none;
+      color: inherit;
+      min-width: 120px;
+    }
+
+    .under a i {
+      font-style: normal;
+      font-size: 2rem;
+      display: block;
+      margin-bottom: 0.55rem;
+    }
+
+    .under a strong {
+      display: block;
+      font-size: 0.95rem;
+      padding-bottom: 0.45rem;
+      border-bottom: 3px solid var(--sky);
+    }
+
+    .under a:nth-child(2) strong { border-color: var(--magenta); }
+    .under a:nth-child(3) strong { border-color: var(--yellow); }
+
+    /* E12 bento */
+    .bento {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 0.75rem;
+      min-height: 240px;
+    }
+
+    .bento a {
+      border-radius: 16px;
+      padding: 1.15rem;
+      text-decoration: none;
+      color: inherit;
+      background: rgba(255,255,255,0.6);
+      border: 1px solid rgba(255,255,255,0.9);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+
+    .bento a:first-child {
+      grid-row: 1 / 3;
+      background: linear-gradient(145deg, rgba(56,189,248,0.25), rgba(255,255,255,0.75));
+    }
+
+    .bento a i { font-style: normal; font-size: 2rem; margin-bottom: 0.5rem; }
+    .bento a strong { font-size: 1rem; }
+    .bento a em { font-style: normal; font-size: 0.75rem; color: var(--muted); margin-top: 0.2rem; }
+
+    /* E13 polaroid */
+    .poli {
+      display: flex;
+      justify-content: center;
+      gap: 1.1rem;
+      flex-wrap: wrap;
+    }
+
+    .poli a {
+      width: 150px;
+      background: #fff;
+      padding: 0.7rem 0.7rem 1rem;
+      border-radius: 6px;
+      box-shadow: 0 10px 28px rgba(28,31,36,0.1);
+      text-decoration: none;
+      color: inherit;
+      text-align: center;
+      transform: rotate(-2deg);
+    }
+
+    .poli a:nth-child(2) { transform: rotate(1.5deg); }
+    .poli a:nth-child(3) { transform: rotate(-1deg); }
+
+    .poli__foto {
+      height: 110px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.4rem;
+      margin-bottom: 0.65rem;
+    }
+
+    .poli a:nth-child(1) .poli__foto { background: #e0f2fe; }
+    .poli a:nth-child(2) .poli__foto { background: #fce7f3; }
+    .poli a:nth-child(3) .poli__foto { background: #fef9c3; }
+
+    .poli a strong { font-size: 0.88rem; font-family: "Playfair Display", Georgia, serif; }
+
+    /* E14 minimal */
+    .mini {
+      max-width: 420px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .mini a {
+      display: block;
+      padding: 0.85rem 0;
+      text-decoration: none;
+      color: inherit;
+      border-bottom: 1px solid rgba(28,31,36,0.1);
+      font-family: "Playfair Display", Georgia, serif;
+      font-size: 1.35rem;
+    }
+
+    .mini a:last-child { border-bottom: none; }
+    .mini a span {
+      display: block;
+      font-family: Poppins, sans-serif;
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 0.2rem;
+      font-weight: 400;
+    }
+
+    .detail {
+      margin-top: 0.9rem;
+      padding: 0.85rem 1rem;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.55);
+      border: 1px solid rgba(255,255,255,0.9);
+      color: var(--muted);
+      font-size: 0.85rem;
+      line-height: 1.5;
+    }
+
+    .detail strong { color: var(--ink); }
+
+    @media (max-width: 700px) {
+      .lista-esp,
+      .editorial-esp,
+      .num-grid,
+      .overlay-esp,
+      .split,
+      .bento {
+        grid-template-columns: 1fr;
+      }
+
+      .bento a:first-child { grid-row: auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <h1>Especialidades — más opciones</h1>
+    <p class="intro">
+      Productos destacados ya queda con <strong>P5 Overlay</strong>.
+      Ahora elige solo la variante de especialidades.
+    </p>
+    <div class="nota">✓ Productos: P5 Overlay reservado</div>
+
+    <div class="tabs" id="tabs">
+      <button class="tab active" type="button" data-id="e1">E1 · Círculos</button>
+      <button class="tab" type="button" data-id="e2">E2 · Iguales</button>
+      <button class="tab" type="button" data-id="e3">E3 · Tarjetas</button>
+      <button class="tab" type="button" data-id="e4">E4 · Badges</button>
+      <button class="tab" type="button" data-id="e5">E5 · Carrusel</button>
+      <button class="tab" type="button" data-id="e6">E6 · Editorial</button>
+      <button class="tab" type="button" data-id="e7">E7 · Numerada</button>
+      <button class="tab" type="button" data-id="e8">E8 · Pills</button>
+      <button class="tab" type="button" data-id="e9">E9 · Overlay</button>
+      <button class="tab" type="button" data-id="e10">E10 · Columnas</button>
+      <button class="tab" type="button" data-id="e11">E11 · Subrayado</button>
+      <button class="tab" type="button" data-id="e12">E12 · Bento</button>
+      <button class="tab" type="button" data-id="e13">E13 · Polaroid</button>
+      <button class="tab" type="button" data-id="e14">E14 · Minimal</button>
+    </div>
+
+    <div class="stage-wrap">
+      <div class="panel active" id="e1">
+        <div class="vidrio">
+          <h3 class="titulo">Nuestras especialidades</h3>
+          <div class="circulos">
+            <a class="circulo" href="#"><div class="circulo__img">📦</div><span class="circulo__label">Plegadizas</span></a>
+            <a class="circulo circulo--dest" href="#"><div class="circulo__img">🛍️</div><span class="circulo__label">Bolsas</span></a>
+            <a class="circulo" href="#"><div class="circulo__img">🏪</div><span class="circulo__label">Exhibidores</span></a>
+          </div>
+          <p class="link-todo">Ver todas las categorías →</p>
+        </div>
+      </div>
+
+      <div class="panel" id="e2">
+        <div class="vidrio">
+          <h3 class="titulo">Nuestras especialidades</h3>
+          <div class="circulos iguales">
+            <a class="circulo" href="#"><div class="circulo__img">📦</div><span class="circulo__label">Plegadizas</span></a>
+            <a class="circulo circulo--dest" href="#"><div class="circulo__img">🛍️</div><span class="circulo__label">Bolsas</span></a>
+            <a class="circulo" href="#"><div class="circulo__img">🏪</div><span class="circulo__label">Exhibidores</span></a>
+          </div>
+          <p class="link-todo">Ver todas las categorías →</p>
+        </div>
+      </div>
+
+      <div class="panel" id="e3">
+        <div class="vidrio">
+          <h3 class="titulo">Nuestras especialidades</h3>
+          <div class="lista-esp">
+            <a class="item-esp" href="#"><span class="item-esp__icon">📦</span><strong>Plegadizas</strong><span>Empaques para góndola</span></a>
+            <a class="item-esp" href="#"><span class="item-esp__icon">🛍️</span><strong>Bolsas</strong><span>Identidad en cada entrega</span></a>
+            <a class="item-esp" href="#"><span class="item-esp__icon">🏪</span><strong>Exhibidores</strong><span>Impacto en punto de venta</span></a>
+          </div>
+          <p class="link-todo">Ver todas las categorías →</p>
+        </div>
+      </div>
+
+      <div class="panel" id="e4">
+        <div class="vidrio">
+          <h3 class="titulo">Nuestras especialidades</h3>
+          <div class="hex-row">
+            <a class="hex hex--c" href="#"><div class="hex__badge"><span>📦</span></div><strong>Plegadizas</strong></a>
+            <a class="hex hex--m" href="#"><div class="hex__badge"><span>🛍️</span></div><strong>Bolsas</strong></a>
+            <a class="hex hex--y" href="#"><div class="hex__badge"><span>🏪</span></div><strong>Exhibidores</strong></a>
+          </div>
+          <p class="link-todo">Ver todas las categorías →</p>
+        </div>
+      </div>
+
+      <div class="panel" id="e5">
+        <div class="vidrio">
+          <h3 class="titulo">Nuestras especialidades</h3>
+          <div class="carrusel-esp">
+            <a class="circulo" href="#"><div class="circulo__img">📦</div><span class="circulo__label">Plegadizas</span></a>
+            <a class="circulo" href="#"><div class="circulo__img">🛍️</div><span class="circulo__label">Bolsas</span></a>
+            <a class="circulo" href="#"><div class="circulo__img">🏪</div><span class="circulo__label">Exhibidores</span></a>
+            <a class="circulo" href="#"><div class="circulo__img">🎁</div><span class="circulo__label">Especiales</span></a>
+            <a class="circulo" href="#"><div class="circulo__img">🪧</div><span class="circulo__label">POP</span></a>
+          </div>
+          <p class="link-todo">Desliza · Ver todas →</p>
+        </div>
+      </div>
+
+      <div class="panel" id="e6">
+        <div class="vidrio">
+          <h3 class="titulo">Nuestras especialidades</h3>
+          <div class="editorial-esp">
+            <div class="editorial-esp__main">
+              <div class="big">🛍️</div>
+              <h4>Bolsas</h4>
+              <p>La especialidad estrella: identidad de marca en cada entrega.</p>
+            </div>
+            <div class="editorial-esp__side">
+              <a class="editorial-esp__mini" href="#"><span>📦</span><div><strong>Plegadizas</strong><em>Empaque estructural</em></div></a>
+              <a class="editorial-esp__mini" href="#"><span>🏪</span><div><strong>Exhibidores</strong><em>Punto de venta</em></div></a>
+              <a class="editorial-esp__mini" href="#"><span>🎁</span><div><strong>Especiales</strong><em>Acabados premium</em></div></a>
+            </div>
+          </div>
+          <p class="link-todo">Ver todas las categorías →</p>
+        </div>
+      </div>
+
+      <div class="panel" id="e7">
+        <div class="vidrio">
+          <h3 class="titulo">Nuestras especialidades</h3>
+          <div class="num-grid">
+            <a class="num-item" href="#"><div class="num-item__n">01</div><strong>Plegadizas</strong><span>Empaques que venden en góndola</span></a>
+            <a class="num-item" href="#"><div class="num-item__n">02</div><strong>Bolsas</strong><span>Identidad en cada entrega</span></a>
+            <a class="num-item" href="#"><div class="num-item__n">03</div><strong>Exhibidores</strong><span>Presencia en el punto de venta</span></a>
+          </div>
+          <p class="link-todo">Ver todas las categorías →</p>
+        </div>
+      </div>
+
+      <div class="panel" id="e8">
+        <div class="vidrio">
+          <h3 class="titulo">Nuestras especialidades</h3>
+          <div class="pills">
+            <a class="pill" href="#"><i>📦</i><div><strong>Plegadizas</strong><em>Empaque estructural</em></div></a>
+            <a class="pill" href="#"><i>🛍️</i><div><strong>Bolsas</strong><em>Identidad de marca</em></div></a>
+            <a class="pill" href="#"><i>🏪</i><div><strong>Exhibidores</strong><em>Punto de venta</em></div></a>
+          </div>
+          <p class="link-todo">Ver todas las categorías →</p>
+        </div>
+      </div>
+
+      <div class="panel" id="e9">
+        <div class="vidrio">
+          <h3 class="titulo">Nuestras especialidades</h3>
+          <div class="overlay-esp">
+            <a class="ov ov--1" href="#"><div class="ov__bg">📦</div><div class="ov__content"><h4>Plegadizas</h4><span>Empaques para góndola</span></div></a>
+            <a class="ov ov--2" href="#"><div class="ov__bg">🛍️</div><div class="ov__content"><h4>Bolsas</h4><span>Identidad en cada entrega</span></div></a>
+            <a class="ov ov--3" href="#"><div class="ov__bg">🏪</div><div class="ov__content"><h4>Exhibidores</h4><span>Impacto en punto de venta</span></div></a>
+          </div>
+          <p class="link-todo">Ver todas las categorías →</p>
+        </div>
+      </div>
+
+      <div class="panel" id="e10">
+        <div class="vidrio">
+          <h3 class="titulo">Nuestras especialidades</h3>
+          <div class="split">
+            <a href="#"><span>📦</span><strong>Plegadizas</strong><em>Empaque estructural</em></a>
+            <a href="#"><span>🛍️</span><strong>Bolsas</strong><em>Identidad de marca</em></a>
+            <a href="#"><span>🏪</span><strong>Exhibidores</strong><em>Punto de venta</em></a>
+          </div>
+          <p class="link-todo">Ver todas las categorías →</p>
+        </div>
+      </div>
+
+      <div class="panel" id="e11">
+        <div class="vidrio">
+          <h3 class="titulo">Nuestras especialidades</h3>
+          <div class="under">
+            <a href="#"><i>📦</i><strong>Plegadizas</strong></a>
+            <a href="#"><i>🛍️</i><strong>Bolsas</strong></a>
+            <a href="#"><i>🏪</i><strong>Exhibidores</strong></a>
+          </div>
+          <p class="link-todo">Ver todas las categorías →</p>
+        </div>
+      </div>
+
+      <div class="panel" id="e12">
+        <div class="vidrio">
+          <h3 class="titulo">Nuestras especialidades</h3>
+          <div class="bento">
+            <a href="#"><i>🛍️</i><strong>Bolsas</strong><em>Especialidad estrella</em></a>
+            <a href="#"><i>📦</i><strong>Plegadizas</strong><em>Góndola</em></a>
+            <a href="#"><i>🏪</i><strong>Exhibidores</strong><em>POP</em></a>
+          </div>
+          <p class="link-todo">Ver todas las categorías →</p>
+        </div>
+      </div>
+
+      <div class="panel" id="e13">
+        <div class="vidrio">
+          <h3 class="titulo">Nuestras especialidades</h3>
+          <div class="poli">
+            <a href="#"><div class="poli__foto">📦</div><strong>Plegadizas</strong></a>
+            <a href="#"><div class="poli__foto">🛍️</div><strong>Bolsas</strong></a>
+            <a href="#"><div class="poli__foto">🏪</div><strong>Exhibidores</strong></a>
+          </div>
+          <p class="link-todo">Ver todas las categorías →</p>
+        </div>
+      </div>
+
+      <div class="panel" id="e14">
+        <div class="vidrio">
+          <h3 class="titulo">Nuestras especialidades</h3>
+          <div class="mini">
+            <a href="#">Plegadizas<span>Empaques para góndola</span></a>
+            <a href="#">Bolsas<span>Identidad en cada entrega</span></a>
+            <a href="#">Exhibidores<span>Impacto en punto de venta</span></a>
+          </div>
+          <p class="link-todo">Ver todas las categorías →</p>
+        </div>
+      </div>
+    </div>
+
+    <p class="detail" id="detail"><strong>E1:</strong> Círculos en vidrio; el del centro más grande.</p>
+  </div>
+
+  <script>
+    const details = {
+      e1: "<strong>E1:</strong> Círculos en vidrio; el del centro más grande.",
+      e2: "<strong>E2:</strong> Tres círculos del mismo tamaño.",
+      e3: "<strong>E3:</strong> Tarjetas con icono y texto.",
+      e4: "<strong>E4:</strong> Badges CMYK en rombo.",
+      e5: "<strong>E5:</strong> Carrusel deslizable.",
+      e6: "<strong>E6:</strong> Editorial: una grande + miniaturas.",
+      e7: "<strong>E7 · Numerada:</strong> 01, 02, 03 con descripción. Estilo servicios.",
+      e8: "<strong>E8 · Pills:</strong> Filas tipo pastilla. Compacto y limpio.",
+      e9: "<strong>E9 · Overlay:</strong> Mismo lenguaje visual que tus productos P5.",
+      e10: "<strong>E10 · Columnas:</strong> Tres paneles de color a altura completa.",
+      e11: "<strong>E11 · Subrayado:</strong> Icono + nombre con acento CMYK abajo.",
+      e12: "<strong>E12 · Bento:</strong> Una grande a la izquierda y dos apiladas.",
+      e13: "<strong>E13 · Polaroid:</strong> Estilo foto inclinada. Más lúdico.",
+      e14: "<strong>E14 · Minimal:</strong> Solo tipografía. Muy editorial."
+    };
+
+    const tabs = document.querySelectorAll(".tab");
+    const panels = document.querySelectorAll(".panel");
+    const detail = document.getElementById("detail");
+
+    tabs.forEach((tab) => {
+      tab.addEventListener("click", () => {
+        const id = tab.dataset.id;
+        tabs.forEach((t) => t.classList.toggle("active", t === tab));
+        panels.forEach((p) => p.classList.toggle("active", p.id === id));
+        detail.innerHTML = details[id];
+      });
+    });
+  </script>
+</body>
+</html>
