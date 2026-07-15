@@ -12,15 +12,25 @@ export const informacionEmpresa = {
   history:
     'Fundada hace más de dos décadas, Aleph Impresores nació con la visión de ofrecer soluciones gráficas integrales a marcas que buscan diferenciarse. Desde nuestros inicios como taller de impresión, hemos evolucionado hasta convertirnos en un aliado estratégico para empresas de consumo masivo, retail y sector farmacéutico.',
   mission:
-    'Crear soluciones gráficas innovadoras que potencien la presencia de marca de nuestros clientes, garantizando calidad, cumplimiento y sostenibilidad en cada proyecto.',
+    'Suministrar a nuestros clientes material de empaque, pensando siempre en la excelencia; cumpliendo con los más altos estándares de calidad, basados en las Buenas Prácticas de Manufactura usadas nacional e internacionalmente, siempre apoyados por el capital intelectual de un grupo selecto de colaboradores especialistas en la materia.',
   vision:
-    'Ser reconocidos como el referente en artes gráficas y empaques en Colombia y Latinoamérica, liderando la transformación del sector con procesos responsables y diseño de alto impacto.',
+    'Ser reconocidos en América como la mejor Empresa de producción en Artes Gráficas, siendo la opción número 1, para realizar empaques a las mejores marcas de reconocimiento mundial.',
   values: [
-    { title: 'Calidad', description: 'Excelencia en cada detalle de impresión y acabado.' },
-    { title: 'Innovación', description: 'Búsqueda constante de nuevas técnicas y materiales.' },
-    { title: 'Compromiso', description: 'Cumplimiento de plazos y expectativas del cliente.' },
-    { title: 'Sostenibilidad', description: 'Procesos responsables con el medio ambiente.' },
-    { title: 'Trabajo en equipo', description: 'Colaboración entre áreas para mejores resultados.' },
+    {
+      title: 'Compromiso social',
+      description:
+        'Nuestros valores con compromiso social se basan en la transparencia de nuestros actos, la responsabilidad con el medio ambiente y el ser humano.',
+    },
+    {
+      title: 'Cuidado mutuo',
+      description:
+        'En nuestro grupo vivimos la frase “CUIDAR LA EMPRESA, PARA QUE LA EMPRESA NOS CUIDE”.',
+    },
+    {
+      title: 'Excelencia y cumplimiento',
+      description:
+        'Con los clientes, el valor de la excelencia y el cumplimiento.',
+    },
   ],
   experience: [
     { metric: '20+', label: 'Años de experiencia' },

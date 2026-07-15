@@ -30,7 +30,8 @@ export function PaginaInicio() {
 
       {/* Hero principal — banner RF-001 */}
       <section className="hero-editorial">
-        <div className="container hero-editorial__grid">
+        <div className="container">
+          <div className="hero-editorial__grid">
           <div className="hero-editorial__texto">
             <h1>
               Dominando el <em>Arte del Color</em>
@@ -52,6 +53,7 @@ export function PaginaInicio() {
             <div className="hero-editorial__forma">
               <img src={imagenHero} alt="Prensa offset Heidelberg Speedmaster en Aleph Impresores" />
             </div>
+          </div>
           </div>
         </div>
       </section>

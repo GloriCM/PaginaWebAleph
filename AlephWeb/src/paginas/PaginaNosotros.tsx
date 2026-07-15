@@ -34,10 +34,12 @@ export function PaginaNosotros() {
         <div className="container">
           <div className="grid grid--2">
             <div className="info-card">
+              <span className="info-card__acento info-card__acento--c" aria-hidden="true" />
               <h3>Misión</h3>
               <p>{informacionEmpresa.mission}</p>
             </div>
             <div className="info-card">
+              <span className="info-card__acento info-card__acento--m" aria-hidden="true" />
               <h3>Visión</h3>
               <p>{informacionEmpresa.vision}</p>
             </div>
@@ -49,12 +51,19 @@ export function PaginaNosotros() {
         <div className="container">
           <TituloSeccion title="Nuestros valores" />
           <div className="grid grid--3">
-            {informacionEmpresa.values.map((v) => (
-              <div key={v.title} className="value-card">
-                <h3>{v.title}</h3>
-                <p>{v.description}</p>
-              </div>
-            ))}
+            {informacionEmpresa.values.map((v, i) => {
+              const acentos = ['c', 'm', 'y'] as const
+              return (
+                <div key={v.title} className="value-card">
+                  <span
+                    className={`info-card__acento info-card__acento--${acentos[i] ?? 'k'}`}
+                    aria-hidden="true"
+                  />
+                  <h3>{v.title}</h3>
+                  <p>{v.description}</p>
+                </div>
+              )
+            })}
           </div>
         </div>
       </section>
