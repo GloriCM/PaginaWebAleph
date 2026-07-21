@@ -8,17 +8,13 @@
 import { Link, useParams } from 'react-router-dom'
 import { MetaPagina } from '../componentes/interfaz/MetaPagina'
 import { Boton } from '../componentes/interfaz/Boton'
-import { obtenerProductoPorSlug } from '../datos/productos'
+import { useProductos } from '../hooks/useProductos'
 import { categorias } from '../datos/categorias'
 
-/**
- * Muestra la ficha completa de un producto identificado por su slug en la URL.
- * Si el producto no existe, renderiza un estado vacío con enlace de retorno.
- * @returns Elemento JSX con el detalle del producto o mensaje de error.
- */
 export function PaginaDetalleProducto() {
   const { slug } = useParams<{ slug: string }>()
-  const product = slug ? obtenerProductoPorSlug(slug) : undefined
+  const productos = useProductos()
+  const product = slug ? productos.find((p) => p.slug === slug) : undefined
   const category = product ? categorias.find((c) => c.id === product.categoryId) : undefined
 
   if (!product) {

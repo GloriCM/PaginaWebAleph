@@ -7,7 +7,7 @@
 
 import { MetaPagina } from '../componentes/interfaz/MetaPagina'
 import { obtenerSolicitudes } from '../datos/solicitudes'
-import { productos } from '../datos/productos'
+import { useProductos } from '../hooks/useProductos'
 import { noticias } from '../datos/contenido'
 
 /**
@@ -15,6 +15,7 @@ import { noticias } from '../datos/contenido'
  * Muestra los cinco registros más recientes en orden descendente por fecha.
  */
 export function PaginaPanelAdministracion() {
+  const productos = useProductos()
   const solicitudes = obtenerSolicitudes()
 
   return (
@@ -57,7 +58,7 @@ export function PaginaPanelAdministracion() {
               {solicitudes.slice(-5).reverse().map((solicitud) => (
                 <tr key={solicitud.id}>
                   <td>{new Date(solicitud.createdAt).toLocaleDateString('es-CO')}</td>
-                  <td>{solicitud.type === 'quote' ? 'Cotización' : 'Contacto'}</td>
+                  <td>{solicitud.type === 'quote' ? 'Cotización' : solicitud.type === 'job' ? 'Postulación' : 'Contacto'}</td>
                   <td>{solicitud.name}</td>
                   <td>{solicitud.email}</td>
                   <td>{solicitud.city}</td>

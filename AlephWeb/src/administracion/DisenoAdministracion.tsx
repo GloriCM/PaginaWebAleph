@@ -1,56 +1,50 @@
 /**
  * @file DisenoAdministracion.tsx
- * @description Layout del panel administrativo con barra lateral de navegación,
- * protección de rutas autenticadas y ruta invitada para el login.
- * Implementa RF-019 (acceso restringido al panel) mediante sessionStorage.
+ * @description Layout del panel administrativo con barra lateral de navegaci?n,
+ * protecci?n de rutas autenticadas y ruta invitada para el login.
  * @module administracion/DisenoAdministracion
  */
 
 import type { ReactNode } from 'react'
-import { Navigate, Outlet, Link, useNavigate } from 'react-router-dom'
-import logo from '../activos/logo.png'
+import { Navigate, Outlet, Link, NavLink, useNavigate } from 'react-router-dom'
+import { LogoAleph } from '../componentes/interfaz/LogoAleph'
+import { RUTA_ACCESO, RUTA_GESTION } from '../config/accesoAdmin'
 
-/**
- * Verifica si el usuario tiene una sesión administrativa activa.
- * @returns `true` si la clave `aleph_admin` está presente en sessionStorage.
- */
+const G = RUTA_GESTION
+
 function estaAutenticado() {
   return sessionStorage.getItem('aleph_admin') === 'true'
 }
 
-/**
- * Layout principal del panel administrativo.
- * Redirige a `/admin/login` si no hay sesión activa.
- * Renderiza la barra lateral con enlaces a los módulos y un `<Outlet />` para el contenido.
- */
 export function DisenoAdministracion() {
   const navigate = useNavigate()
 
   if (!estaAutenticado()) {
-    return <Navigate to="/admin/login" replace />
+    return <Navigate to={RUTA_ACCESO} replace />
   }
 
-  /** Cierra la sesión administrativa y redirige al formulario de login. */
   function cerrarSesion() {
     sessionStorage.removeItem('aleph_admin')
-    navigate('/admin/login')
+    navigate(RUTA_ACCESO)
   }
 
   return (
     <div className="admin-layout">
       <aside className="admin-sidebar">
-        <img src={logo} alt="Aleph" className="admin-sidebar__logo" />
+        <LogoAleph variant="claro" className="admin-sidebar__logo" />
         <nav>
-          <Link to="/admin">Dashboard</Link>
-          <Link to="/admin/productos">Productos</Link>
-          <Link to="/admin/imagenes">Imágenes</Link>
-          <Link to="/admin/leads">Solicitudes</Link>
-          <Link to="/admin/usuarios">Usuarios</Link>
+          <NavLink to={G} end>Dashboard</NavLink>
+          <NavLink to={`${G}/inicio`}>P?gina de inicio</NavLink>
+          <NavLink to={`${G}/productos`}>Productos</NavLink>
+          <NavLink to={`${G}/imagenes`}>Im?genes</NavLink>
+          <NavLink to={`${G}/vacantes`}>Vacantes RRHH</NavLink>
+          <NavLink to={`${G}/leads`}>Solicitudes</NavLink>
+          <NavLink to={`${G}/usuarios`}>Usuarios</NavLink>
         </nav>
         <button type="button" onClick={cerrarSesion} className="admin-sidebar__logout">
-          Cerrar sesión
+          Cerrar sesi?n
         </button>
-        <Link to="/" className="admin-sidebar__site">← Ver sitio</Link>
+        <Link to="/" className="admin-sidebar__site">? Ver sitio</Link>
       </aside>
       <main className="admin-main">
         <Outlet />
@@ -59,19 +53,13 @@ export function DisenoAdministracion() {
   )
 }
 
-/** Propiedades del componente de ruta invitada. */
 interface PropiedadesRutaInvitadoAdmin {
-  /** Contenido a renderizar cuando el usuario no está autenticado. */
   children: ReactNode
 }
 
-/**
- * Ruta accesible solo para usuarios no autenticados (p. ej. login).
- * Redirige a `/admin` si ya existe una sesión activa.
- */
 export function RutaInvitadoAdmin({ children }: PropiedadesRutaInvitadoAdmin) {
   if (estaAutenticado()) {
-    return <Navigate to="/admin" replace />
+    return <Navigate to={RUTA_GESTION} replace />
   }
   return children
 }

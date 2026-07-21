@@ -19,7 +19,7 @@ export function PaginaSolicitudes() {
     <>
       <MetaPagina title="Admin - Solicitudes" />
       <h1>Clientes potenciales</h1>
-      <p className="admin-subtitle">Solicitudes de contacto y cotización (RF-008)</p>
+      <p className="admin-subtitle">Solicitudes de contacto, cotización y postulaciones (RF-008)</p>
 
       {solicitudes.length === 0 ? (
         <p>No hay solicitudes registradas. Los formularios del sitio las almacenan aquí.</p>
@@ -35,22 +35,44 @@ export function PaginaSolicitudes() {
               <th>Teléfono</th>
               <th>Ciudad</th>
               <th>Detalle</th>
+              <th>CV</th>
             </tr>
           </thead>
           <tbody>
             {solicitudes.map((solicitud) => (
               <tr key={solicitud.id}>
                 <td>{new Date(solicitud.createdAt).toLocaleString('es-CO')}</td>
-                <td>{solicitud.type === 'quote' ? 'Cotización' : 'Contacto'}</td>
+                <td>
+                  {solicitud.type === 'quote'
+                    ? 'Cotización'
+                    : solicitud.type === 'job'
+                      ? 'Postulación'
+                      : 'Contacto'}
+                </td>
                 <td>{solicitud.name}</td>
-                <td>{solicitud.company || '—'}</td>
+                <td>{solicitud.company || solicitud.role || '—'}</td>
                 <td>{solicitud.email}</td>
                 <td>{solicitud.phone}</td>
                 <td>{solicitud.city}</td>
                 <td>
                   {solicitud.type === 'quote' && solicitud.quoteData
                     ? `${solicitud.quoteData.product} · ${solicitud.quoteData.quantity}`
-                    : solicitud.message}
+                    : solicitud.type === 'job' && solicitud.jobData
+                      ? `${solicitud.jobData.areaLabel ?? solicitud.jobData.area}${solicitud.jobData.cvFileName ? ` · ${solicitud.jobData.cvFileName}` : ''}${solicitud.jobData.emailEnviadoA ? ` → ${solicitud.jobData.emailEnviadoA}` : ''}`
+                      : solicitud.message}
+                </td>
+                <td>
+                  {solicitud.type === 'job' && solicitud.jobData?.cvDataUrl ? (
+                    <a
+                      href={solicitud.jobData.cvDataUrl}
+                      download={solicitud.jobData.cvFileName ?? 'hoja-de-vida'}
+                      className="admin-table__cv-link"
+                    >
+                      Descargar
+                    </a>
+                  ) : (
+                    '—'
+                  )}
                 </td>
               </tr>
             ))}

@@ -23,8 +23,10 @@ export const configuracionSitio = {
   whatsapp: '573001234567',
   /** Correo electrónico corporativo. */
   email: 'contacto@alephimpresores.com',
+  /** Correo de Recursos Humanos — destino de hojas de vida (RF postulaciones). */
+  emailRRHH: 'rrhh@alephimpresores.com',
   /** Dirección física de la empresa (RF-014). */
-  address: 'Calle 123 #45-67, Bogotá, Colombia',
+  address: 'Graficas Elliot SAS, Cra. 1 #43-76, COMUNA 4, Cali, Valle del Cauca',
   /** Horario de atención. */
   horarios: [
     'Lunes a viernes: 8:00 a. m. – 5:30 p. m.',

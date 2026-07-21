@@ -1,180 +1,231 @@
 /**
  * @file PaginaInicio.tsx
- * @description Página principal con diseño glassmorphism inspirado en los mockups de Aleph.
- * Implementa RF-001: banner, resumen, categorías circulares, productos y contacto.
- * @module paginas/PaginaInicio
+ * @description Página principal — contenido editable desde el panel admin.
  */
 
+import { lazy, Suspense, useEffect, useRef, useState, type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import { MetaPagina } from '../componentes/interfaz/MetaPagina'
 import { Boton, TituloSeccion } from '../componentes/interfaz/Boton'
-import { SeccionComentarios } from '../componentes/interfaz/SeccionComentarios'
-import { informacionEmpresa } from '../datos/empresa'
+import { HeroInicioIndustrial } from '../componentes/inicio/HeroInicioIndustrial'
+import { useContenidoInicio } from '../hooks/useContenidoInicio'
 import { categorias } from '../datos/categorias'
-import { productos } from '../datos/productos'
-import { configuracionSitio } from '../datos/configuracionSitio'
-import imagenHero from '../activos/prensa-heidelberg.png'
+import { clientes } from '../datos/contenido'
+import { resolverUrlMapa } from '../utilidades/mapaEmbed'
+import { lazyPagina } from '../utilidades/lazyPagina'
+import { CarruselMarcasInicio } from '../componentes/inicio/CarruselMarcasInicio'
 
-/** Tres categorías destacadas para la sección de círculos fluidos. */
-const categoriasDestacadas = categorias.filter((c) =>
-  ['plegadizas', 'bolsas', 'exhibidores'].includes(c.id),
+const MapaEmbed = lazy(() =>
+  import('../componentes/interfaz/MapaEmbed').then((m) => ({ default: m.MapaEmbed })),
 )
 
-/**
- * Página de inicio con hero editorial, especialidades circulares y llamados a la acción.
- */
+const SeccionComentarios = lazyPagina(
+  () => import('../componentes/interfaz/SeccionComentarios'),
+  'SeccionComentarios',
+)
+
 export function PaginaInicio() {
+  const contenido = useContenidoInicio()
+  const refEspecialidades = useRef<HTMLElement>(null)
+  const [especialidadesAnimadas, setEspecialidadesAnimadas] = useState(false)
+
+  useEffect(() => {
+    const seccion = refEspecialidades.current
+    if (!seccion) return
+
+    if (!('IntersectionObserver' in window)) {
+      setEspecialidadesAnimadas(true)
+      return
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setEspecialidadesAnimadas(true)
+          observer.disconnect()
+        }
+      },
+      { threshold: 0.18, rootMargin: '0px 0px -40px 0px' },
+    )
+
+    observer.observe(seccion)
+    return () => observer.disconnect()
+  }, [])
+  const { seo, hero, sobreNosotros, especialidades, marcasClientes, ctaCotizacion, contacto } =
+    contenido
+
+  const categoriasDestacadas = especialidades.categoriaIds
+    .map((id) => categorias.find((c) => c.id === id))
+    .filter(Boolean)
+
+  const marcasMostrar = marcasClientes.clienteIds
+    .map((id) => clientes.find((c) => c.id === id))
+    .filter(Boolean) as typeof clientes
+
   return (
     <>
-      <MetaPagina title={configuracionSitio.seo.defaultTitle} description={configuracionSitio.seo.defaultDescription} />
+      <MetaPagina title={seo.titulo} description={seo.descripcion} />
 
-      {/* Hero principal — banner RF-001 */}
-      <section className="hero-editorial">
+      <HeroInicioIndustrial hero={hero} />
+
+      <section className="section seccion-intro seccion-diferida">
         <div className="container">
-          <div className="hero-editorial__grid">
-          <div className="hero-editorial__texto">
-            <h1>
-              Dominando el <em>Arte del Color</em>
-            </h1>
-            <p>
-              Somos una empresa colombiana especializada en artes gráficas, desarrollo de 
-              empaques.Combinamos tecnología de punta con un equipo creativo
-              para entregar productos que destacan. 
-              Donde la fluidez creativa se encuentra con la
-              precisión técnica. No solo imprimimos; traducimos tu visión en experiencias táctiles
-              sobre superficies premium.
-            </p>
-            <Boton to="/galeria" variant="gradient">
-              Nuestro portafolio →
-            </Boton>
-          </div>
-
-          <div className="hero-editorial__visual">
-            <div className="hero-editorial__forma">
-              <img src={imagenHero} alt="Prensa offset Heidelberg Speedmaster en Aleph Impresores" />
+          <div
+            className={`panel-vidrio seccion-intro__panel${sobreNosotros.imagen ? ' seccion-intro__panel--con-imagen' : ''}`}
+          >
+            <TituloSeccion title={sobreNosotros.titulo} />
+            <div className={sobreNosotros.imagen ? 'seccion-intro__grid' : undefined}>
+              <div className="seccion-intro__pilares">
+                <article className="pilar-empresa">
+                  <span className="pilar-empresa__acento pilar-empresa__acento--c" aria-hidden="true" />
+                  <h3>{sobreNosotros.misionTitulo}</h3>
+                  <p>{sobreNosotros.mision}</p>
+                </article>
+                <article className="pilar-empresa">
+                  <span className="pilar-empresa__acento pilar-empresa__acento--m" aria-hidden="true" />
+                  <h3>{sobreNosotros.visionTitulo}</h3>
+                  <p>{sobreNosotros.vision}</p>
+                </article>
+              </div>
+              {sobreNosotros.imagen && (
+                <img
+                  src={sobreNosotros.imagen}
+                  alt=""
+                  className="seccion-intro__imagen"
+                  loading="lazy"
+                  decoding="async"
+                />
+              )}
             </div>
-          </div>
-          </div>
-        </div>
-      </section>
-
-      {/* About — misión, visión y enlace a /nosotros */}
-      <section className="section seccion-intro">
-        <div className="container">
-          <div className="panel-vidrio seccion-intro__panel">
-            <TituloSeccion title="Sobre nosotros" />
-            <div className="seccion-intro__pilares">
-              <article className="pilar-empresa">
-                <span className="pilar-empresa__acento pilar-empresa__acento--c" aria-hidden="true" />
-                <h3>Misión</h3>
-                <p>{informacionEmpresa.mission}</p>
-              </article>
-              <article className="pilar-empresa">
-                <span className="pilar-empresa__acento pilar-empresa__acento--m" aria-hidden="true" />
-                <h3>Visión</h3>
-                <p>{informacionEmpresa.vision}</p>
-              </article>
+            <div className="seccion-intro__metricas-bar hero-vidrio-oscuro">
+              <ul className="hero-industrial__metricas">
+                {sobreNosotros.metricas.map((item) => (
+                  <li key={item.label} className="hero-industrial__metrica">
+                    <strong>{item.metric}</strong>
+                    <span>{item.label}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
             <div className="seccion-intro__accion">
-              <Boton to="/nosotros" variant="gradient">
-                Conocemos mas →
+              <Boton to={sobreNosotros.boton.enlace} variant="gradient">
+                {sobreNosotros.boton.texto}
               </Boton>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Especialidades — estilo subrayado CMYK */}
-      <section className="section seccion-especialidades">
+      <section
+        ref={refEspecialidades}
+        className={`section seccion-especialidades seccion-diferida${especialidadesAnimadas ? ' seccion-especialidades--animada' : ''}`}
+      >
         <div className="container">
           <div className="panel-vidrio seccion-especialidades__panel">
-            <TituloSeccion title="Nuestras especialidades" />
+            <TituloSeccion title={especialidades.titulo} />
             <div className="especialidades-subrayado">
-              {categoriasDestacadas.map((cat, i) => (
-                <Link
-                  key={cat.id}
-                  to={`/productos?categoria=${cat.id}`}
-                  className={`especialidad-subrayado especialidad-subrayado--${i + 1}`}
-                >
-                  <span className="especialidad-subrayado__icono" aria-hidden="true">{cat.icon}</span>
-                  <strong>{cat.name}</strong>
-                </Link>
-              ))}
-            </div>
-            <div className="enlace-ver-todo">
-              <Link to="/productos">Ver todas las categorías →</Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Productos destacados — estilo overlay */}
-      <section className="section seccion-productos-destacados">
-        <div className="container">
-          <div className="panel-vidrio seccion-productos-destacados__panel">
-            <TituloSeccion title="Productos destacados" subtitle="Conoce algunas de nuestras soluciones" />
-            <div className="productos-overlay">
-              {productos.slice(0, 3).map((product, i) => {
-                const categoria = categorias.find((c) => c.id === product.categoryId)
+              {categoriasDestacadas.map((cat, i) => {
+                if (!cat) return null
+                const imagen = especialidades.imagenes[cat.id]
                 return (
                   <Link
-                    key={product.id}
-                    to={`/productos/${product.slug}`}
-                    className={`producto-overlay producto-overlay--${i + 1}`}
+                    key={cat.id}
+                    to={`/productos?categoria=${cat.id}`}
+                    className={`especialidad-subrayado especialidad-subrayado--${i + 1}`}
+                    style={{ '--especialidad-i': i } as CSSProperties}
                   >
-                    <span className="producto-overlay__fondo" aria-hidden="true">
-                      {categoria?.icon ?? '✦'}
-                    </span>
-                    <span className="producto-overlay__contenido">
-                      {categoria && <span className="producto-overlay__cat">{categoria.name}</span>}
-                      <strong>{product.name}</strong>
-                    </span>
+                    <div className="especialidad-subrayado__marco" aria-hidden="true">
+                      {imagen ? (
+                        <img
+                          src={imagen}
+                          alt=""
+                          className="especialidad-subrayado__imagen"
+                          loading="lazy"
+                          decoding="async"
+                        />
+                      ) : (
+                        <span className="especialidad-subrayado__icono">{cat.icon}</span>
+                      )}
+                    </div>
+                    <strong>{cat.name}</strong>
                   </Link>
                 )
               })}
             </div>
+            <div className="enlace-ver-todo enlace-ver-todo--especialidades">
+              <Link to={especialidades.enlaceVerTodo.enlace}>{especialidades.enlaceVerTodo.texto}</Link>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Testimonios y comentarios de clientes — RF-013 */}
-      <SeccionComentarios />
+      <section className="section seccion-marcas seccion-diferida">
+        <div className="container">
+          <div className="seccion-marcas__encabezado">
+            <TituloSeccion title={marcasClientes.titulo} subtitle={marcasClientes.subtitulo} />
+          </div>
+        </div>
+        {marcasMostrar.length > 0 ? (
+          <CarruselMarcasInicio marcas={marcasMostrar} logos={marcasClientes.logos} />
+        ) : (
+          <p className="marcas-vacio container">Aún no hay marcas seleccionadas para mostrar.</p>
+        )}
+      </section>
 
-      {/* CTA cotización */}
-      <section className="section cta-impresion">
+      <Suspense fallback={null}>
+        <SeccionComentarios />
+      </Suspense>
+
+      <section
+        className={`section cta-impresion seccion-diferida${ctaCotizacion.imagenFondo ? ' cta-impresion--con-imagen' : ''}`}
+        style={
+          ctaCotizacion.imagenFondo
+            ? { backgroundImage: `url(${ctaCotizacion.imagenFondo})` }
+            : undefined
+        }
+      >
         <div className="container">
           <div className="panel-vidrio cta-impresion__panel">
-            <h2>¿Listo para imprimir tu próxima obra maestra?</h2>
-            <p>Cuéntanos tu proyecto y recibe una propuesta personalizada.</p>
-            <Boton to="/cotizacion" variant="gradient">Solicitar cotización</Boton>
+            <h2>{ctaCotizacion.titulo}</h2>
+            <p>{ctaCotizacion.parrafo}</p>
+            <Boton to={ctaCotizacion.boton.enlace} variant="gradient">
+              {ctaCotizacion.boton.texto}
+            </Boton>
           </div>
         </div>
       </section>
 
-      {/* Contacto y mapa — RF-001, RF-014 */}
-      <section className="section seccion-contacto-inicio">
+      <section className="section seccion-contacto-inicio seccion-diferida">
         <div className="container">
           <div className="panel-vidrio contact-preview">
             <div className="contact-preview__info">
-              <TituloSeccion title="Contáctanos" align="left" />
+              <TituloSeccion title={contacto.titulo} />
               <ul className="contact-list">
-                <li><strong>Dirección:</strong> {configuracionSitio.address}</li>
-                <li><strong>Teléfono:</strong> <a href={`tel:${configuracionSitio.phone}`}>{configuracionSitio.phone}</a></li>
-                <li><strong>Email:</strong> <a href={`mailto:${configuracionSitio.email}`}>{configuracionSitio.email}</a></li>
+                <li>
+                  <strong>Dirección:</strong> {contacto.direccion}
+                </li>
+                <li>
+                  <strong>Teléfono:</strong>{' '}
+                  <a href={`tel:${contacto.telefono}`}>{contacto.telefono}</a>
+                </li>
+                <li>
+                  <strong>Email:</strong>{' '}
+                  <a href={`mailto:${contacto.email}`}>{contacto.email}</a>
+                </li>
               </ul>
               <div className="contact-preview__actions">
-                <Boton to="/contacto" className="form--contacto__enviar">¿Quieres enviar un mensaje?</Boton>
+                <Boton to={contacto.boton.enlace} className="form--contacto__enviar">
+                  {contacto.boton.texto}
+                </Boton>
               </div>
             </div>
-            <div className="map-embed map-embed--interno">
-              <iframe
-                title="Ubicación de Aleph Impresores"
-                src={configuracionSitio.mapEmbedUrl}
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-                allowFullScreen
-              />
-            </div>
+            <Suspense
+              fallback={
+                <div className="map-embed map-embed--interno map-embed__placeholder" aria-hidden="true" />
+              }
+            >
+              <MapaEmbed title="Ubicación de Aleph Impresores" src={resolverUrlMapa(contacto.direccion, contacto.mapEmbedUrl)} />
+            </Suspense>
           </div>
         </div>
       </section>

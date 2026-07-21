@@ -107,12 +107,20 @@ export interface DatosFormularioCotizacion {
   file?: File | null
 }
 
-/** Solicitud de contacto o cotización almacenada (RF-008). */
+/** Solicitud de contacto, cotización o postulación laboral (RF-008). */
 export interface SolicitudCliente extends DatosFormularioContacto {
   id: string
-  type: 'contact' | 'quote'
+  type: 'contact' | 'quote' | 'job'
   createdAt: string
   quoteData?: Omit<DatosFormularioCotizacion, 'file'>
+  jobData?: {
+    area: string
+    areaLabel?: string
+    experience?: string
+    cvFileName?: string
+    cvDataUrl?: string
+    emailEnviadoA?: string
+  }
 }
 
 /** Usuario del panel administrativo (RF-022). */

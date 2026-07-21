@@ -8,15 +8,19 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './estilos-globales.css'
+import './estilos/hero-industrial.css'
 import Aplicacion from './Aplicacion.tsx'
+import { inicializarContenidoEditable } from './datos/inicializarContenidoEditable'
 
 /** Contenedor raíz del DOM donde se monta React. */
 const contenedor = document.getElementById('root')
 
 if (contenedor) {
-  createRoot(contenedor).render(
-    <StrictMode>
-      <Aplicacion />
-    </StrictMode>,
-  )
+  inicializarContenidoEditable().then(() => {
+    createRoot(contenedor).render(
+      <StrictMode>
+        <Aplicacion />
+      </StrictMode>,
+    )
+  })
 }

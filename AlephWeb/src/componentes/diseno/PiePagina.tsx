@@ -1,71 +1,204 @@
 /**
+
  * @file PiePagina.tsx
+
  * @description Pie de página con marca, contacto y acciones rápidas (RF-015).
+
  * @module componentes/diseno/PiePagina
+
  */
 
-import { Link } from 'react-router-dom'
-import logo from '../../activos/logo.png'
+
+
+import { Link, useLocation } from 'react-router-dom'
+
+import type { MouseEvent } from 'react'
+
+import { LogoAleph } from '../interfaz/LogoAleph'
+
 import { configuracionSitio } from '../../datos/configuracionSitio'
+import { obtenerContactoPublico } from '../../datos/contactoPublico'
+import { useContenidoInicio } from '../../hooks/useContenidoInicio'
+
+import { useAccesoSecreto } from '../../hooks/useAccesoSecreto'
+
+import { esRutaDisenoIndustrial } from '../../config/disenoInicio'
+
+
+
+
 
 /**
+
  * Footer del sitio: marca, datos de contacto y accesos rápidos.
- * Visible en la página de inicio.
+
  */
+
 export function PiePagina() {
+
+  const { pathname } = useLocation()
+  const contacto = obtenerContactoPublico()
+  useContenidoInicio()
+
+  const industrial = esRutaDisenoIndustrial(pathname)
+
+  const { registrarClic } = useAccesoSecreto()
+
+
+
+  function manejarClicCopyright(e: MouseEvent) {
+
+    if (registrarClic()) e.preventDefault()
+
+  }
+
+
+
   return (
-    <footer className="footer">
-      <div className="container footer__inner">
-        <div className="footer__brand">
-          <img src={logo} alt={configuracionSitio.name} className="footer__logo" />
-          <p>{configuracionSitio.tagline}</p>
+
+    <footer className={`footer${industrial ? ' footer--industrial panel-vidrio' : ''}`}>
+
+      <div className={industrial ? 'footer__wrap' : 'container footer__wrap'}>
+
+        <div className="footer__envoltorio">
+
+          <div className={`footer__inner${industrial ? ' container' : ''}`}>
+
+            <div className="footer__brand">
+
+              <LogoAleph variant={industrial ? 'claro' : 'default'} className="footer__logo" />
+
+              <p>{configuracionSitio.tagline}</p>
+
+            </div>
+
+
+
+            <div className="footer__columnas">
+
+              <div className="footer__bloque">
+
+                <h4>Contacto</h4>
+
+                <ul className="footer__contact">
+
+                  <li>{contacto.direccion}</li>
+
+                  <li>
+
+                    <a href={`tel:${contacto.telefono}`}>{contacto.telefono}</a>
+
+                  </li>
+
+                  <li>
+
+                    <a href={`mailto:${contacto.email}`}>{contacto.email}</a>
+
+                  </li>
+
+                </ul>
+
+              </div>
+
+
+
+              <div className="footer__bloque">
+
+                <h4>Horarios</h4>
+
+                <ul className="footer__contact">
+
+                  {configuracionSitio.horarios.map((horario) => (
+
+                    <li key={horario}>{horario}</li>
+
+                  ))}
+
+                </ul>
+
+              </div>
+
+
+
+              <div className="footer__bloque">
+
+                <h4>Acciones rápidas</h4>
+
+                <ul className="footer__links">
+
+                  <li>
+
+                    <Link to="/cotizacion">Solicitar cotización</Link>
+
+                  </li>
+
+                  <li>
+
+                    <Link to="/contacto">Formulario de contacto</Link>
+
+                  </li>
+
+                  <li>
+
+                    <Link to="/trabaja-con-nosotros">Trabaja con nosotros</Link>
+
+                  </li>
+
+                  <li>
+
+                    <Link to="/certificaciones">Ver certificaciones</Link>
+
+                  </li>
+
+                </ul>
+
+              </div>
+
+            </div>
+
+          </div>
+
+
+
+          <div className="footer__bottom">
+
+            <div className={industrial ? 'container' : undefined}>
+
+              <p>
+
+                <button
+
+                  type="button"
+
+                  className="footer__acceso-secreto"
+
+                  onClick={manejarClicCopyright}
+
+                  aria-label="Copyright"
+
+                >
+
+                  ©
+
+                </button>
+
+                {' '}
+
+                {new Date().getFullYear()} {configuracionSitio.name}. Todos los derechos reservados.
+
+              </p>
+
+            </div>
+
+          </div>
+
         </div>
 
-        <div className="footer__columnas">
-          <div className="footer__bloque">
-            <h4>Contacto</h4>
-            <ul className="footer__contact">
-              <li>{configuracionSitio.address}</li>
-              <li>
-                <a href={`tel:${configuracionSitio.phone}`}>{configuracionSitio.phone}</a>
-              </li>
-              <li>
-                <a href={`mailto:${configuracionSitio.email}`}>{configuracionSitio.email}</a>
-              </li>
-            </ul>
-          </div>
-
-          <div className="footer__bloque">
-            <h4>Horarios</h4>
-            <ul className="footer__contact">
-              {configuracionSitio.horarios.map((horario) => (
-                <li key={horario}>{horario}</li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="footer__bloque">
-            <h4>Acciones rápidas</h4>
-            <ul className="footer__links">
-              <li>
-                <Link to="/cotizacion">Solicitar cotización</Link>
-              </li>
-              <li>
-                <Link to="/contacto">Formulario de contacto</Link>
-              </li>
-              <li>
-                <Link to="/certificaciones">Ver certificaciones</Link>
-              </li>
-            </ul>
-          </div>
-        </div>
       </div>
 
-      <div className="footer__bottom">
-        <div className="container">
-          <p>© {new Date().getFullYear()} {configuracionSitio.name}. Todos los derechos reservados.</p>
-        </div>
-      </div>
     </footer>
+
   )
+
 }
+

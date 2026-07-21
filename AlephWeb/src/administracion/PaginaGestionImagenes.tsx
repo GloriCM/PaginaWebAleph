@@ -6,26 +6,21 @@
  */
 
 import { MetaPagina } from '../componentes/interfaz/MetaPagina'
-import { productos } from '../datos/productos'
+import { useProductos } from '../hooks/useProductos'
 import { proyectosGaleria, noticias } from '../datos/contenido'
 
-/**
- * Colección unificada de todas las imágenes referenciadas en el sitio.
- * Incluye imagen principal y galería de cada producto, proyectos de galería y noticias.
- */
-const todasLasImagenes = [
-  ...productos.flatMap((p) => [
-    { src: p.image, label: p.name },
-    ...p.gallery.map((g, i) => ({ src: g, label: `${p.name} ${i + 1}` })),
-  ]),
-  ...proyectosGaleria.map((g) => ({ src: g.image, label: g.name })),
-  ...noticias.map((n) => ({ src: n.image, label: n.title })),
-]
-
-/**
- * Vista de cuadrícula con todas las imágenes del sitio y su etiqueta descriptiva.
- */
 export function PaginaGestionImagenes() {
+  const productos = useProductos()
+
+  const todasLasImagenes = [
+    ...productos.flatMap((p) => [
+      { src: p.image, label: p.name },
+      ...p.gallery.map((g, i) => ({ src: g, label: `${p.name} ${i + 1}` })),
+    ]),
+    ...proyectosGaleria.map((g) => ({ src: g.image, label: g.name })),
+    ...noticias.map((n) => ({ src: n.image, label: n.title })),
+  ]
+
   return (
     <>
       <MetaPagina title="Admin - Imágenes" />

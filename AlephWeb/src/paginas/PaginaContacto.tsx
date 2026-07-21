@@ -1,8 +1,6 @@
 /**
  * @file PaginaContacto.tsx
- * @description Página de contacto con información corporativa, mapa embebido
- * y formulario para enviar mensajes. Persiste las solicitudes localmente.
- * Implementa los requisitos funcionales RF-006 (formulario de contacto) y RF-014 (mapa).
+ * @description Página de contacto con información, mapa y formulario.
  * @module paginas/PaginaContacto
  */
 
@@ -10,10 +8,12 @@ import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { MetaPagina } from '../componentes/interfaz/MetaPagina'
 import { TituloSeccion, Boton } from '../componentes/interfaz/Boton'
+import { MapaEmbed } from '../componentes/interfaz/MapaEmbed'
+import { SeccionPagina } from '../componentes/interfaz/SeccionPagina'
 import { guardarSolicitud } from '../datos/solicitudes'
-import { configuracionSitio } from '../datos/configuracionSitio'
+import { obtenerContactoPublico } from '../datos/contactoPublico'
+import { useContenidoInicio } from '../hooks/useContenidoInicio'
 
-/** Estado inicial vacío del formulario de contacto. */
 const formularioInicial = {
   name: '',
   company: '',
@@ -24,26 +24,16 @@ const formularioInicial = {
   message: '',
 }
 
-/**
- * Renderiza la página de contacto con datos de la empresa y formulario de mensaje.
- * @returns Elemento JSX con información de contacto y formulario interactivo.
- */
 export function PaginaContacto() {
+  useContenidoInicio()
+  const contacto = obtenerContactoPublico()
   const [form, setForm] = useState(formularioInicial)
   const [submitted, setSubmitted] = useState(false)
 
-  /**
-   * Actualiza un campo del formulario al escribir en un input o textarea.
-   * @param e - Evento de cambio del campo de formulario.
-   */
   function manejarCambio(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
   }
 
-  /**
-   * Envía el formulario de contacto y guarda la solicitud en almacenamiento local.
-   * @param e - Evento de envío del formulario.
-   */
   function manejarEnvio(e: FormEvent) {
     e.preventDefault()
     guardarSolicitud({ ...form, type: 'contact' })
@@ -55,93 +45,100 @@ export function PaginaContacto() {
     <>
       <MetaPagina title="Contacto" description="Envíanos tu mensaje y te responderemos pronto." />
 
-      <section className="section">
-        <div className="container">
-          <div className="panel-vidrio contact-page">
+      {submitted ? (
+        <SeccionPagina
+          className="pagina-seccion--hero pagina-seccion--contacto pagina-seccion--formulario-exito"
+          panelClassName="pagina-seccion__panel--formulario"
+        >
+          <div className="formulario-exito" role="status">
+            <div className="formulario-exito__icono" aria-hidden="true">✓</div>
+            <h2 className="formulario-exito__titulo">¡Mensaje enviado!</h2>
+            <p className="formulario-exito__texto">
+              Recibimos tu consulta. El equipo de Aleph te contactará a la brevedad.
+            </p>
+            <div className="formulario-exito__acciones">
+              <Boton variant="gradient" onClick={() => setSubmitted(false)}>
+                Enviar otro mensaje
+              </Boton>
+              <Boton to="/" variant="outline">
+                Ir al inicio
+              </Boton>
+            </div>
+          </div>
+        </SeccionPagina>
+      ) : (
+        <>
+          <SeccionPagina className="pagina-seccion--hero pagina-seccion--contacto">
+            <h1 className="pagina-seccion__titulo">Contáctanos</h1>
+            <p className="pagina-seccion__texto">
+              Escríbenos o visítanos. Estamos listos para ayudarte con tu próximo proyecto.
+            </p>
+            <p className="pagina-seccion__texto pagina-seccion__texto--secundario">
+              ¿Buscas empleo?{' '}
+              <Link to="/trabaja-con-nosotros">Trabaja con nosotros</Link>
+            </p>
+          </SeccionPagina>
+
+          <SeccionPagina panelClassName="contact-page">
             <div className="contact-page__info">
-              <TituloSeccion title="Información de contacto" align="left" />
+              <TituloSeccion title="Información de contacto" />
               <ul className="contact-list">
-                <li><strong>Dirección:</strong> {configuracionSitio.address}</li>
-                <li><strong>Teléfono:</strong> <a href={`tel:${configuracionSitio.phone}`}>{configuracionSitio.phone}</a></li>
-                <li><strong>Email:</strong> <a href={`mailto:${configuracionSitio.email}`}>{configuracionSitio.email}</a></li>
+                <li><strong>Dirección:</strong> {contacto.direccion}</li>
+                <li><strong>Teléfono:</strong> <a href={`tel:${contacto.telefono}`}>{contacto.telefono}</a></li>
+                <li><strong>Email:</strong> <a href={`mailto:${contacto.email}`}>{contacto.email}</a></li>
               </ul>
-              <div className="map-embed">
-                <iframe
-                  title="Ubicación de Aleph Impresores"
-                  src={configuracionSitio.mapEmbedUrl}
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                  allowFullScreen
-                />
-              </div>
+              <MapaEmbed
+                title="Ubicación de Aleph Impresores"
+                src={contacto.mapEmbedUrl}
+                className="map-embed map-embed--interno"
+              />
             </div>
 
             <div className="contact-page__form">
-              <TituloSeccion title="Envíanos un mensaje" align="left" />
-              {submitted ? (
-                <div className="form-success form-success--premium" role="status">
-                  <div className="form-success__dots" aria-hidden="true">
-                    <span className="dot dot--c" />
-                    <span className="dot dot--m" />
-                    <span className="dot dot--y" />
-                    <span className="dot dot--k" />
-                  </div>
-                  <h3>¡Mensaje enviado!</h3>
-                  <p>Recibimos tu consulta. El equipo de Aleph te contactará a la brevedad.</p>
-                  <div className="form-success__acciones">
-                    <Boton onClick={() => setSubmitted(false)} className="form--contacto__enviar">
-                      Enviar otro mensaje
-                    </Boton>
-                    <Link to="/" className="form-success__inicio">
-                      Ir al inicio
-                    </Link>
-                  </div>
-                </div>
-              ) : (
-                <form className="form form--contacto" onSubmit={manejarEnvio}>
-                  <div className="form__row">
-                    <label>
-                      Nombre *
-                      <input name="name" required value={form.name} onChange={manejarCambio} />
-                    </label>
-                    <label>
-                      Empresa
-                      <input name="company" value={form.company} onChange={manejarCambio} />
-                    </label>
-                  </div>
-                  <div className="form__row">
-                    <label>
-                      Cargo
-                      <input name="role" value={form.role} onChange={manejarCambio} />
-                    </label>
-                    <label>
-                      Correo *
-                      <input name="email" type="email" required value={form.email} onChange={manejarCambio} />
-                    </label>
-                  </div>
-                  <div className="form__row">
-                    <label>
-                      Teléfono *
-                      <input name="phone" type="tel" required value={form.phone} onChange={manejarCambio} />
-                    </label>
-                    <label>
-                      Ciudad *
-                      <input name="city" required value={form.city} onChange={manejarCambio} />
-                    </label>
-                  </div>
-                  <label>
-                    Mensaje *
-                    <textarea name="message" required rows={5} value={form.message} onChange={manejarCambio} />
-                  </label>
-                  <Boton type="submit" className="form--contacto__enviar">
-                    Enviar mensaje
-                  </Boton>
-                </form>
-              )}
+              <TituloSeccion title="Envíanos un mensaje" />
+              <form className="form form--contacto" onSubmit={manejarEnvio}>
+              <div className="form__row">
+                <label>
+                  Nombre *
+                  <input name="name" required value={form.name} onChange={manejarCambio} />
+                </label>
+                <label>
+                  Empresa
+                  <input name="company" value={form.company} onChange={manejarCambio} />
+                </label>
+              </div>
+              <div className="form__row">
+                <label>
+                  Cargo
+                  <input name="role" value={form.role} onChange={manejarCambio} />
+                </label>
+                <label>
+                  Correo *
+                  <input name="email" type="email" required value={form.email} onChange={manejarCambio} />
+                </label>
+              </div>
+              <div className="form__row">
+                <label>
+                  Teléfono *
+                  <input name="phone" type="tel" required value={form.phone} onChange={manejarCambio} />
+                </label>
+                <label>
+                  Ciudad *
+                  <input name="city" required value={form.city} onChange={manejarCambio} />
+                </label>
+              </div>
+              <label>
+                Mensaje *
+                <textarea name="message" required rows={5} value={form.message} onChange={manejarCambio} />
+              </label>
+              <Boton type="submit" className="form--contacto__enviar">
+                Enviar mensaje
+              </Boton>
+            </form>
             </div>
-          </div>
-        </div>
-      </section>
+          </SeccionPagina>
+        </>
+      )}
     </>
   )
 }

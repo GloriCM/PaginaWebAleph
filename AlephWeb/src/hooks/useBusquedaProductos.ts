@@ -6,8 +6,8 @@
  */
 
 import { useMemo, useState } from 'react'
-import { productos } from '../datos/productos'
 import { categorias } from '../datos/categorias'
+import { useProductos } from './useProductos'
 
 /**
  * Hook que gestiona el estado de búsqueda de productos.
@@ -15,6 +15,7 @@ import { categorias } from '../datos/categorias'
  * @returns Estado y funciones para consulta y filtrado.
  */
 export function useBusquedaProductos(categoriaInicial = '') {
+  const productos = useProductos()
   const [consulta, setConsulta] = useState('')
   const [categoria, setCategoria] = useState(categoriaInicial)
 
@@ -33,7 +34,7 @@ export function useBusquedaProductos(categoriaInicial = '') {
           .includes(texto)
       return coincideCategoria && coincideTexto
     })
-  }, [consulta, categoria])
+  }, [consulta, categoria, productos])
 
   return {
     consulta,

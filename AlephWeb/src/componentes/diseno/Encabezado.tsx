@@ -5,9 +5,12 @@
  * @module componentes/diseno/Encabezado
  */
 
-import { Link, NavLink } from 'react-router-dom'
-import logo from '../../activos/logo.png'
+import { Link, NavLink, useLocation } from 'react-router-dom'
+import type { MouseEvent } from 'react'
+import { LogoAleph } from '../interfaz/LogoAleph'
 import { configuracionSitio } from '../../datos/configuracionSitio'
+import { useAccesoSecreto } from '../../hooks/useAccesoSecreto'
+import { esRutaDisenoIndustrial } from '../../config/disenoInicio'
 
 /** Enlaces del menú de navegación principal. */
 const enlacesNavegacion = [
@@ -15,6 +18,7 @@ const enlacesNavegacion = [
   { to: '/nosotros', label: 'Sobre nosotros' },
   { to: '/servicios', label: 'Servicios' },
   { to: '/productos', label: 'Catálogo' },
+  { to: '/trabaja-con-nosotros', label: 'Trabaja con nosotros' },
   { to: '/contacto', label: 'Contacto' },
 ]
 
@@ -22,12 +26,20 @@ const enlacesNavegacion = [
  * Encabezado a ancho completo con logo y navegación centrada.
  */
 export function Encabezado() {
+  const { pathname } = useLocation()
+  const { registrarClic } = useAccesoSecreto()
+  const logoClaro = esRutaDisenoIndustrial(pathname)
+
+  function manejarClicLogo(e: MouseEvent) {
+    if (registrarClic()) e.preventDefault()
+  }
+
   return (
     <header className="header">
       <div className="container header__shell">
-        <div className="header__pill">
-          <Link to="/" className="header__logo">
-            <img src={logo} alt={configuracionSitio.name} />
+        <div className={`header__pill${logoClaro ? ' hero-vidrio-oscuro' : ''}`}>
+          <Link to="/" className="header__logo" onClick={manejarClicLogo} aria-label={configuracionSitio.name}>
+            <LogoAleph variant={logoClaro ? 'claro' : 'default'} />
           </Link>
 
           <nav className="header__nav" aria-label="Navegación principal">

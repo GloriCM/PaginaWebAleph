@@ -19,8 +19,8 @@ const generarImagenPlaceholder = (color: string, text: string) =>
     </svg>`,
   )}`
 
-/** Catálogo completo de productos disponibles en el sitio. */
-export const productos: Producto[] = [
+/** Catálogo inicial de productos (solo lectura — usar obtenerProductos() en runtime). */
+export const productosIniciales: Producto[] = [
   {
     id: '1',
     name: 'Caja plegadiza retail',
@@ -145,18 +145,8 @@ export const productos: Producto[] = [
   },
 ]
 
-/**
- * Busca un producto por su slug de URL.
- * @param slug - Identificador amigable del producto.
- */
-export function obtenerProductoPorSlug(slug: string) {
-  return productos.find((p) => p.slug === slug)
-}
-
-/**
- * Filtra productos por categoría.
- * @param categoryId - ID de la categoría.
- */
-export function obtenerProductosPorCategoria(categoryId: string) {
-  return productos.filter((p) => p.categoryId === categoryId)
-}
+export {
+  obtenerProductos,
+  obtenerProductoPorSlug,
+  obtenerProductosPorCategoria,
+} from './catalogoProductos'

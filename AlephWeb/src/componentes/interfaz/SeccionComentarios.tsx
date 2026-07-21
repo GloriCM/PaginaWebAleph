@@ -4,10 +4,10 @@
  * @module componentes/interfaz/SeccionComentarios
  */
 
-import { useState, type FormEvent } from 'react'
+import { useState, useEffect, type FormEvent } from 'react'
 import { TituloSeccion, Boton } from './Boton'
-import { testimonios as testimoniosBase } from '../../datos/contenido'
 import { guardarComentario, obtenerComentarios } from '../../datos/comentarios'
+import { useContenidoInicio } from '../../hooks/useContenidoInicio'
 import type { Testimonio } from '../../tipos/indice'
 
 const formularioInicial = {
@@ -43,12 +43,17 @@ function Estrellas({ valor }: { valor: number }) {
  * Lista de opiniones con rating y formulario para publicar un nuevo comentario.
  */
 export function SeccionComentarios() {
+  const { testimonios: configTestimonios } = useContenidoInicio()
   const [comentarios, setComentarios] = useState<Testimonio[]>(() => [
-    ...testimoniosBase,
+    ...configTestimonios.items,
     ...obtenerComentarios(),
   ])
   const [form, setForm] = useState(formularioInicial)
   const [enviado, setEnviado] = useState(false)
+
+  useEffect(() => {
+    setComentarios([...configTestimonios.items, ...obtenerComentarios()])
+  }, [configTestimonios.items])
 
   function manejarCambio(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
@@ -67,8 +72,8 @@ export function SeccionComentarios() {
       <div className="container">
         <div className="panel-vidrio seccion-comentarios__envoltorio">
           <TituloSeccion
-            title="Lo que dicen nuestros clientes"
-            subtitle="Lee opiniones reales o deja la tuya"
+            title={configTestimonios.titulo}
+            subtitle={configTestimonios.subtitulo}
           />
 
           <div className="seccion-comentarios__lista">
