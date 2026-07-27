@@ -8,13 +8,14 @@
 
 import { MetaPagina } from '../componentes/interfaz/MetaPagina'
 import { TituloSeccion } from '../componentes/interfaz/Boton'
-import { certificaciones } from '../datos/contenido'
+import { useContenidoEditorial } from '../hooks/useContenidoEditorial'
 
 /**
  * Renderiza el listado ampliado de certificaciones con imagen y detalles del emisor.
  * @returns Elemento JSX con las certificaciones de la empresa.
  */
 export function PaginaCertificaciones() {
+  const { certificaciones } = useContenidoEditorial()
   return (
     <>
       <MetaPagina

@@ -5,17 +5,33 @@
  * @module paginas/PaginaDetalleProducto
  */
 
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { MetaPagina } from '../componentes/interfaz/MetaPagina'
 import { Boton } from '../componentes/interfaz/Boton'
 import { useProductos } from '../hooks/useProductos'
 import { categorias } from '../datos/categorias'
+import { imagenesProducto } from '../datos/catalogoProductos'
 
 export function PaginaDetalleProducto() {
   const { slug } = useParams<{ slug: string }>()
   const productos = useProductos()
   const product = slug ? productos.find((p) => p.slug === slug) : undefined
   const category = product ? categorias.find((c) => c.id === product.categoryId) : undefined
+
+  const imagenes = useMemo(
+    () => (product ? imagenesProducto(product.image, product.gallery) : []),
+    [product],
+  )
+
+  const [indiceImagen, setIndiceImagen] = useState(0)
+
+  useEffect(() => {
+    setIndiceImagen(0)
+  }, [product?.id])
+
+  const indiceSeguro = Math.min(indiceImagen, Math.max(imagenes.length - 1, 0))
+  const imagenActiva = imagenes[indiceSeguro] ?? product?.image ?? ''
 
   if (!product) {
     return (
@@ -32,7 +48,7 @@ export function PaginaDetalleProducto() {
     <>
       <MetaPagina title={product.name} description={product.shortDescription} />
 
-      <section className="section">
+      <section className="section pagina-detalle-producto">
         <div className="container">
           <nav className="breadcrumb" aria-label="Ruta de navegación">
             <Link to="/">Inicio</Link> / <Link to="/productos">Productos</Link> / {product.name}
@@ -40,15 +56,32 @@ export function PaginaDetalleProducto() {
 
           <div className="product-detail">
             <div className="product-detail__gallery">
-              <img src={product.image} alt={product.name} className="product-detail__main-image" />
-              <div className="product-detail__thumbs">
-                {product.gallery.map((img, i) => (
-                  <img key={i} src={img} alt={`${product.name} vista ${i + 1}`} loading="lazy" />
-                ))}
+              <div className="product-detail__image-wrap">
+                <img
+                  src={imagenActiva}
+                  alt={product.name}
+                  className="product-detail__main-image"
+                />
               </div>
+              {imagenes.length > 1 && (
+                <div className="product-detail__thumbs" role="list" aria-label="Galería del producto">
+                  {imagenes.map((img, i) => (
+                    <button
+                      key={`${i}-${img.slice(0, 24)}`}
+                      type="button"
+                      className={`product-detail__thumb-wrap${i === indiceSeguro ? ' product-detail__thumb-wrap--activo' : ''}`}
+                      onClick={() => setIndiceImagen(i)}
+                      aria-label={`Ver imagen ${i + 1}`}
+                      aria-pressed={i === indiceSeguro}
+                    >
+                      <img src={img} alt="" loading="lazy" />
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
-            <div className="product-detail__info">
+            <div className="product-detail__info panel-vidrio product-detail__info-panel">
               {category && <span className="product-card__category">{category.name}</span>}
               <h1>{product.name}</h1>
               <p className="product-detail__desc">{product.description}</p>

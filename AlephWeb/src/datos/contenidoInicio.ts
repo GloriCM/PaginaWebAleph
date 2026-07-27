@@ -6,12 +6,17 @@
 import { configuracionSitio } from './configuracionSitio'
 import { informacionEmpresa } from './empresa'
 import { testimonios as testimoniosBase, clientes as clientesBase } from './contenido'
-import type { Testimonio } from '../tipos/indice'
+import type { Cliente, Testimonio } from '../tipos/indice'
 import {
   establecerCacheContenidoInicio,
   obtenerCacheContenidoInicio,
 } from './cacheContenidoInicio'
-import { eliminarDatoSitio, guardarDatoSitio } from '../utilidades/almacenamientoSitio'
+import {
+  guardarContenidoInicioApi,
+  haySesionAdmin,
+  obtenerContenidoInicioApi,
+  verificarApiDisponible,
+} from '../servicios/api'
 
 export interface EnlaceBoton {
   texto: string
@@ -21,6 +26,11 @@ export interface EnlaceBoton {
 export interface MetricaHero {
   metric: string
   label: string
+}
+
+export interface ValorEmpresa {
+  title: string
+  description: string
 }
 
 export interface ContenidoInicio {
@@ -40,12 +50,18 @@ export interface ContenidoInicio {
   }
   sobreNosotros: {
     titulo: string
+    historiaTitulo: string
+    historia: string
     misionTitulo: string
     mision: string
     visionTitulo: string
     vision: string
     imagen: string | null
     boton: EnlaceBoton
+    valoresTitulo: string
+    valores: ValorEmpresa[]
+    experienciaTitulo: string
+    experienciaSubtitulo: string
     metricas: MetricaHero[]
   }
   especialidades: {
@@ -57,6 +73,7 @@ export interface ContenidoInicio {
   marcasClientes: {
     titulo: string
     subtitulo: string
+    items: Cliente[]
     clienteIds: string[]
     logos: Record<string, string | null>
     enlaceVerTodo: EnlaceBoton
@@ -103,12 +120,18 @@ export const contenidoInicioPorDefecto: ContenidoInicio = {
   },
   sobreNosotros: {
     titulo: 'Sobre nosotros',
+    historiaTitulo: 'Nuestra historia',
+    historia: informacionEmpresa.history,
     misionTitulo: 'Misión',
     mision: informacionEmpresa.mission,
     visionTitulo: 'Visión',
     vision: informacionEmpresa.vision,
     imagen: null,
     boton: { texto: 'Conócenos más →', enlace: '/nosotros' },
+    valoresTitulo: 'Nuestros valores',
+    valores: informacionEmpresa.values.map((v) => ({ ...v })),
+    experienciaTitulo: 'Experiencia',
+    experienciaSubtitulo: 'Números que respaldan nuestro trabajo',
     metricas: informacionEmpresa.experience.map((m) => ({ ...m })),
   },
   especialidades: {
@@ -120,6 +143,7 @@ export const contenidoInicioPorDefecto: ContenidoInicio = {
   marcasClientes: {
     titulo: 'Marcas con las que hemos trabajado',
     subtitulo: 'Empresas líderes que confían en nuestra calidad',
+    items: clientesBase.map((c) => ({ ...c })),
     clienteIds: clientesBase.map((c) => c.id),
     logos: {},
     enlaceVerTodo: { texto: 'Ver todos nuestros clientes →', enlace: '/clientes' },
@@ -163,15 +187,53 @@ type ContenidoInicioParcial = Partial<ContenidoInicio> & {
   hero?: Partial<ContenidoInicio['hero']> & { metricas?: MetricaHero[] }
 }
 
+function logoMarcaPlaceholder(nombre: string): string {
+  const texto = (nombre.trim() || 'Marca').slice(0, 14)
+  return `data:image/svg+xml,${encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="240" height="120" viewBox="0 0 240 120">
+      <rect fill="#1a2830" width="240" height="120" rx="8"/>
+      <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#8fa3ad" font-family="sans-serif" font-size="14">${texto}</text>
+    </svg>`,
+  )}`
+}
+
+function aplicarLogosAMarcas(
+  items: Cliente[],
+  logos: Record<string, string | null>,
+): Cliente[] {
+  return items.map((marca) => {
+    const logoSubido = logos[marca.id]
+    if (logoSubido) return { ...marca, logo: logoSubido }
+    if (marca.logo) return marca
+    return { ...marca, logo: logoMarcaPlaceholder(marca.name) }
+  })
+}
+
+function resolverItemsMarcas(parcial: ContenidoInicioParcial): Cliente[] {
+  const base = contenidoInicioPorDefecto.marcasClientes
+  const logos = { ...base.logos, ...parcial.marcasClientes?.logos }
+
+  if (parcial.marcasClientes?.items?.length) {
+    return aplicarLogosAMarcas(parcial.marcasClientes.items, logos)
+  }
+
+  return aplicarLogosAMarcas(base.items.map((c) => ({ ...c })), logos)
+}
+
 function resolverMarcasClientes(parcial: ContenidoInicioParcial): ContenidoInicio['marcasClientes'] {
   const base = contenidoInicioPorDefecto.marcasClientes
+  const items = resolverItemsMarcas(parcial)
+  const idsDisponibles = new Set(items.map((m) => m.id))
 
   if (parcial.marcasClientes) {
-    const ids = parcial.marcasClientes.clienteIds
+    const ids = (parcial.marcasClientes.clienteIds ?? base.clienteIds).filter((id) =>
+      idsDisponibles.has(id),
+    )
     return {
       ...base,
       ...parcial.marcasClientes,
-      clienteIds: ids?.length ? ids : base.clienteIds,
+      items,
+      clienteIds: ids.length ? ids : items.map((m) => m.id),
       logos: { ...base.logos, ...parcial.marcasClientes.logos },
       enlaceVerTodo: {
         ...base.enlaceVerTodo,
@@ -183,12 +245,13 @@ function resolverMarcasClientes(parcial: ContenidoInicioParcial): ContenidoInici
   if (parcial.productosDestacados) {
     return {
       ...base,
+      items,
       titulo: 'Marcas con las que hemos trabajado',
       subtitulo: 'Empresas líderes que confían en nuestra calidad',
     }
   }
 
-  return base
+  return { ...base, items }
 }
 
 export function fusionarContenidoInicio(parcial: ContenidoInicioParcial): ContenidoInicio {
@@ -209,6 +272,7 @@ export function fusionarContenidoInicio(parcial: ContenidoInicioParcial): Conten
       ...base.sobreNosotros,
       ...parcial.sobreNosotros,
       boton: { ...base.sobreNosotros.boton, ...parcial.sobreNosotros?.boton },
+      valores: parcial.sobreNosotros?.valores ?? base.sobreNosotros.valores,
       metricas:
         parcial.sobreNosotros?.metricas ??
         parcial.hero?.metricas ??
@@ -255,6 +319,26 @@ export function normalizarContenidoInicio(contenido: ContenidoInicio): Contenido
     }
   }
 
+  if (!normalizado.sobreNosotros.valores?.length) {
+    normalizado = {
+      ...normalizado,
+      sobreNosotros: {
+        ...normalizado.sobreNosotros,
+        valores: [...contenidoInicioPorDefecto.sobreNosotros.valores],
+      },
+    }
+  }
+
+  if (!normalizado.sobreNosotros.historia?.trim()) {
+    normalizado = {
+      ...normalizado,
+      sobreNosotros: {
+        ...normalizado.sobreNosotros,
+        historia: contenidoInicioPorDefecto.sobreNosotros.historia,
+      },
+    }
+  }
+
   if (!normalizado.marcasClientes) {
     normalizado = {
       ...normalizado,
@@ -265,6 +349,17 @@ export function normalizarContenidoInicio(contenido: ContenidoInicio): Contenido
       ...normalizado,
       marcasClientes: {
         ...normalizado.marcasClientes,
+        clienteIds: normalizado.marcasClientes.items.map((m) => m.id),
+      },
+    }
+  }
+
+  if (!normalizado.marcasClientes.items?.length) {
+    normalizado = {
+      ...normalizado,
+      marcasClientes: {
+        ...normalizado.marcasClientes,
+        items: [...contenidoInicioPorDefecto.marcasClientes.items],
         clienteIds: [...contenidoInicioPorDefecto.marcasClientes.clienteIds],
       },
     }
@@ -290,21 +385,80 @@ export function obtenerContenidoInicio(): ContenidoInicio {
   return { ...contenidoInicioPorDefecto }
 }
 
+/** Marcas visibles en el carrusel de la portada, en el orden configurado. */
+export function obtenerMarcasInicioVisibles(contenido = obtenerContenidoInicio()): Cliente[] {
+  const { items, clienteIds } = contenido.marcasClientes
+  return clienteIds
+    .map((id) => items.find((m) => m.id === id))
+    .filter((m): m is Cliente => Boolean(m))
+}
+
+/** Catálogo completo de marcas/clientes editable desde el admin. */
+export function obtenerMarcasCatalogo(contenido = obtenerContenidoInicio()): Cliente[] {
+  return contenido.marcasClientes.items
+}
+
+export function crearMarcaVacia(): Cliente {
+  const id = `marca-${Date.now()}`
+  return {
+    id,
+    name: 'Nueva marca',
+    industry: '',
+    logo: logoMarcaPlaceholder('Nueva marca'),
+  }
+}
+
+export async function cargarContenidoInicioDesdeApi(): Promise<ContenidoInicio> {
+  if (await verificarApiDisponible()) {
+    try {
+      const remoto = await obtenerContenidoInicioApi()
+      if (remoto && typeof remoto === 'object') {
+        const contenido = normalizarContenidoInicio(
+          fusionarContenidoInicio(remoto as Partial<ContenidoInicio>),
+        )
+        establecerCacheContenidoInicio(contenido)
+        return contenido
+      }
+    } catch (error) {
+      console.warn('No se pudo cargar contenido inicio desde API:', error)
+    }
+  }
+
+  const original = { ...contenidoInicioPorDefecto }
+  establecerCacheContenidoInicio(original)
+  return original
+}
+
 export async function guardarContenidoInicio(contenido: ContenidoInicio): Promise<ContenidoInicio> {
   const actualizado: ContenidoInicio = {
     ...contenido,
     updatedAt: new Date().toISOString(),
   }
 
-  await guardarDatoSitio(CLAVE_CONTENIDO_INICIO, actualizado)
+  if (!haySesionAdmin()) {
+    throw new Error('Sesión expirada. Cierra sesión e ingresa de nuevo al panel.')
+  }
+
+  try {
+    await guardarContenidoInicioApi(actualizado)
+  } catch (error) {
+    const mensaje =
+      error instanceof Error ? error.message : 'No se pudo guardar en la base de datos.'
+    throw new Error(mensaje)
+  }
+
   establecerCacheContenidoInicio(actualizado)
   window.dispatchEvent(new Event(EVENTO_CONTENIDO_INICIO))
   return actualizado
 }
 
 export async function restablecerContenidoInicio(): Promise<ContenidoInicio> {
-  await eliminarDatoSitio(CLAVE_CONTENIDO_INICIO)
   const original = { ...contenidoInicioPorDefecto }
+
+  if (haySesionAdmin()) {
+    await guardarContenidoInicioApi(original)
+  }
+
   establecerCacheContenidoInicio(original)
   window.dispatchEvent(new Event(EVENTO_CONTENIDO_INICIO))
   return original

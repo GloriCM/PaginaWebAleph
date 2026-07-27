@@ -24,7 +24,9 @@ export const configuracionSitio = {
   /** Correo electrónico corporativo. */
   email: 'contacto@alephimpresores.com',
   /** Correo de Recursos Humanos — destino de hojas de vida (RF postulaciones). */
-  emailRRHH: 'rrhh@alephimpresores.com',
+  emailRRHH: 'gestionhumana@grupoelliot.com',
+  /** Correo de servicio al cliente — destino de contacto y cotizaciones. */
+  emailServicioCliente: 'servicioalcliente@grupoelliot.com',
   /** Dirección física de la empresa (RF-014). */
   address: 'Graficas Elliot SAS, Cra. 1 #43-76, COMUNA 4, Cali, Valle del Cauca',
   /** Horario de atención. */

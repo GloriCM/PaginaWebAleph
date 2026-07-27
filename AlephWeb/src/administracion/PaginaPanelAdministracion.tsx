@@ -5,18 +5,21 @@
  * @module administracion/PaginaPanelAdministracion
  */
 
+import { useEffect, useState } from 'react'
 import { MetaPagina } from '../componentes/interfaz/MetaPagina'
 import { obtenerSolicitudes } from '../datos/solicitudes'
 import { useProductos } from '../hooks/useProductos'
-import { noticias } from '../datos/contenido'
+import { useContenidoEditorial } from '../hooks/useContenidoEditorial'
+import type { SolicitudCliente } from '../tipos/indice'
 
-/**
- * Vista principal del panel con estadísticas y tabla de solicitudes recientes.
- * Muestra los cinco registros más recientes en orden descendente por fecha.
- */
 export function PaginaPanelAdministracion() {
   const productos = useProductos()
-  const solicitudes = obtenerSolicitudes()
+  const { noticias } = useContenidoEditorial()
+  const [solicitudes, setSolicitudes] = useState<SolicitudCliente[]>([])
+
+  useEffect(() => {
+    obtenerSolicitudes().then(setSolicitudes).catch(() => setSolicitudes([]))
+  }, [])
 
   return (
     <>

@@ -203,9 +203,7 @@ export const testimonios: Testimonio[] = [
 ]
 
 /**
- * Obtiene una noticia por su slug.
+ * Obtiene una noticia por su slug (delegado al contenido editorial en caché).
  * @param slug - Identificador de URL de la noticia.
  */
-export function obtenerNoticiaPorSlug(slug: string) {
-  return noticias.find((n) => n.slug === slug)
-}
+export { obtenerNoticiaPorSlug } from './contenidoEditorial'

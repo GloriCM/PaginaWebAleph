@@ -10,7 +10,7 @@ import { Boton, TituloSeccion } from '../componentes/interfaz/Boton'
 import { HeroInicioIndustrial } from '../componentes/inicio/HeroInicioIndustrial'
 import { useContenidoInicio } from '../hooks/useContenidoInicio'
 import { categorias } from '../datos/categorias'
-import { clientes } from '../datos/contenido'
+import { obtenerMarcasInicioVisibles } from '../datos/contenidoInicio'
 import { resolverUrlMapa } from '../utilidades/mapaEmbed'
 import { lazyPagina } from '../utilidades/lazyPagina'
 import { CarruselMarcasInicio } from '../componentes/inicio/CarruselMarcasInicio'
@@ -58,9 +58,7 @@ export function PaginaInicio() {
     .map((id) => categorias.find((c) => c.id === id))
     .filter(Boolean)
 
-  const marcasMostrar = marcasClientes.clienteIds
-    .map((id) => clientes.find((c) => c.id === id))
-    .filter(Boolean) as typeof clientes
+  const marcasMostrar = obtenerMarcasInicioVisibles(contenido)
 
   return (
     <>
@@ -121,40 +119,44 @@ export function PaginaInicio() {
         className={`section seccion-especialidades seccion-diferida${especialidadesAnimadas ? ' seccion-especialidades--animada' : ''}`}
       >
         <div className="container">
-          <div className="panel-vidrio seccion-especialidades__panel">
+          <div className="seccion-especialidades__encabezado">
             <TituloSeccion title={especialidades.titulo} />
-            <div className="especialidades-subrayado">
-              {categoriasDestacadas.map((cat, i) => {
-                if (!cat) return null
-                const imagen = especialidades.imagenes[cat.id]
-                return (
-                  <Link
-                    key={cat.id}
-                    to={`/productos?categoria=${cat.id}`}
-                    className={`especialidad-subrayado especialidad-subrayado--${i + 1}`}
-                    style={{ '--especialidad-i': i } as CSSProperties}
-                  >
-                    <div className="especialidad-subrayado__marco" aria-hidden="true">
-                      {imagen ? (
-                        <img
-                          src={imagen}
-                          alt=""
-                          className="especialidad-subrayado__imagen"
-                          loading="lazy"
-                          decoding="async"
-                        />
-                      ) : (
-                        <span className="especialidad-subrayado__icono">{cat.icon}</span>
-                      )}
-                    </div>
-                    <strong>{cat.name}</strong>
-                  </Link>
-                )
-              })}
-            </div>
-            <div className="enlace-ver-todo enlace-ver-todo--especialidades">
-              <Link to={especialidades.enlaceVerTodo.enlace}>{especialidades.enlaceVerTodo.texto}</Link>
-            </div>
+          </div>
+        </div>
+        <div className="container">
+          <div className="especialidades-grid">
+            {categoriasDestacadas.map((cat, i) => {
+              if (!cat) return null
+              const imagen = especialidades.imagenes[cat.id]
+              return (
+                <Link
+                  key={cat.id}
+                  to={`/productos?categoria=${cat.id}`}
+                  className="especialidad-tarjeta"
+                  style={{ '--especialidad-i': i } as CSSProperties}
+                >
+                  <div className="especialidad-tarjeta__media">
+                    {imagen ? (
+                      <img
+                        src={imagen}
+                        alt=""
+                        className="especialidad-tarjeta__imagen"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    ) : (
+                      <span className="especialidad-tarjeta__icono" aria-hidden="true">
+                        {cat.icon}
+                      </span>
+                    )}
+                  </div>
+                  <span className="especialidad-tarjeta__nombre">{cat.name}</span>
+                </Link>
+              )
+            })}
+          </div>
+          <div className="enlace-ver-todo enlace-ver-todo--especialidades">
+            <Link to={especialidades.enlaceVerTodo.enlace}>{especialidades.enlaceVerTodo.texto}</Link>
           </div>
         </div>
       </section>
@@ -166,7 +168,7 @@ export function PaginaInicio() {
           </div>
         </div>
         {marcasMostrar.length > 0 ? (
-          <CarruselMarcasInicio marcas={marcasMostrar} logos={marcasClientes.logos} />
+          <CarruselMarcasInicio marcas={marcasMostrar} />
         ) : (
           <p className="marcas-vacio container">Aún no hay marcas seleccionadas para mostrar.</p>
         )}

@@ -1,0 +1,10 @@
+# Ejemplo de túnel Cloudflare para exponer la API Express (puerto 3001)
+# Guía: ver DEPLOY_CLOUDFLARE.md
+
+# tunnel: aleph-api
+# credentials-file: C:\Users\TU_USUARIO\.cloudflared\TU_TUNNEL_ID.json
+
+ingress:
+  - hostname: api.tudominio.com
+    service: http://localhost:3001
+  - service: http_status:404

@@ -3,20 +3,48 @@
  * @description Panel para que RRHH publique el banner de vacantes disponibles.
  */
 
-import { useState, type ChangeEvent, type FormEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import { MetaPagina } from '../componentes/interfaz/MetaPagina'
+import { AlertaCambiosSinGuardar } from './componentes/AlertaCambiosSinGuardar'
 import { configuracionSitio } from '../datos/configuracionSitio'
+import { snapshotFormulario, useFormularioSinGuardar } from '../hooks/useFormularioSinGuardar'
 import {
   archivoABase64,
+  cargarBannerVacantes,
   guardarBannerVacantes,
   obtenerBannerVacantes,
   type BannerVacantesRRHH,
 } from '../datos/vacantesRRHH'
 
 export function PaginaGestionVacantes() {
+  const lineaBaseRef = useRef('')
+  const emailRRHH = configuracionSitio.emailRRHH
   const [banner, setBanner] = useState<BannerVacantesRRHH>(() => obtenerBannerVacantes())
+  const [cargando, setCargando] = useState(true)
   const [guardando, setGuardando] = useState(false)
   const [mensaje, setMensaje] = useState('')
+
+  const hayCambios = useMemo(() => {
+    if (cargando) return false
+    return snapshotFormulario({ ...banner, updatedAt: null }) !== lineaBaseRef.current
+  }, [banner, cargando])
+
+  useFormularioSinGuardar(hayCambios)
+
+  useEffect(() => {
+    let activo = true
+    setCargando(true)
+    cargarBannerVacantes().then((datos) => {
+      if (activo) {
+        setBanner(datos)
+        lineaBaseRef.current = snapshotFormulario({ ...datos, updatedAt: null })
+        setCargando(false)
+      }
+    })
+    return () => {
+      activo = false
+    }
+  }, [])
 
   async function manejarImagen(e: ChangeEvent<HTMLInputElement>) {
     const archivo = e.target.files?.[0]
@@ -39,6 +67,7 @@ export function PaginaGestionVacantes() {
     try {
       const guardado = await guardarBannerVacantes(banner)
       setBanner(guardado)
+      lineaBaseRef.current = snapshotFormulario({ ...guardado, updatedAt: null })
       setMensaje('Banner publicado. Revisa la página «Trabaja con nosotros».')
     } catch (error) {
       setMensaje(error instanceof Error ? error.message : 'No se pudo guardar el banner.')
@@ -65,6 +94,7 @@ export function PaginaGestionVacantes() {
 
       <div className="admin-vacantes-grid">
         <form className="admin-vacantes-form" onSubmit={manejarEnvio}>
+          <AlertaCambiosSinGuardar visible={hayCambios} etiquetaGuardar="Publicar banner" />
           <section className="admin-section">
             <h2>Imagen de vacantes</h2>
             <p className="admin-note" style={{ marginTop: 0 }}>
@@ -135,7 +165,7 @@ export function PaginaGestionVacantes() {
 
           <p className="admin-note">
             Las postulaciones se gestionan en <strong>Solicitudes</strong>. Correo de RRHH:{' '}
-            <strong>{configuracionSitio.emailRRHH}</strong>
+            <strong>{emailRRHH}</strong>
           </p>
         </aside>
       </div>

@@ -2,12 +2,16 @@
   "name": "alephweb",
   "private": true,
   "version": "0.0.0",
+  "engines": {
+    "node": ">=20"
+  },
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy:pages": "npm run build && wrangler pages deploy dist"
   },
   "dependencies": {
     "react": "^19.2.7",

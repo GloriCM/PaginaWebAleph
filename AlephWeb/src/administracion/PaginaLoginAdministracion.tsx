@@ -3,27 +3,36 @@
  * @description Página de inicio de sesión del panel administrativo.
  */
 
-import { useState, type FormEvent } from 'react'
+import { useState, type FormEvent, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { MetaPagina } from '../componentes/interfaz/MetaPagina'
 import { LogoAleph } from '../componentes/interfaz/LogoAleph'
 import { RUTA_GESTION } from '../config/accesoAdmin'
-
-const USUARIO_DEMO = { email: 'admin@aleph.com', password: 'admin123' }
+import { loginAdmin, cerrarSesionAdmin } from '../servicios/api'
 
 export function PaginaLoginAdministracion() {
   const navigate = useNavigate()
+
+  useEffect(() => {
+    cerrarSesionAdmin()
+  }, [])
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [cargando, setCargando] = useState(false)
 
-  function manejarEnvio(e: FormEvent) {
+  async function manejarEnvio(e: FormEvent) {
     e.preventDefault()
-    if (email === USUARIO_DEMO.email && password === USUARIO_DEMO.password) {
-      sessionStorage.setItem('aleph_admin', 'true')
+    setCargando(true)
+    setError('')
+
+    try {
+      await loginAdmin(email.trim(), password)
       navigate(RUTA_GESTION)
-    } else {
-      setError('Credenciales incorrectas. Usa admin@aleph.com / admin123')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo iniciar sesión')
+    } finally {
+      setCargando(false)
     }
   }
 
@@ -72,13 +81,15 @@ export function PaginaLoginAdministracion() {
             />
           </label>
 
-          <button type="submit" className="admin-login__submit">
-            Ingresar
+          <button type="submit" className="admin-login__submit" disabled={cargando}>
+            {cargando ? 'Ingresando…' : 'Ingresar'}
           </button>
         </form>
 
         <p className="admin-login__hint">
-          Demo: <strong>admin@aleph.com</strong> / <strong>admin123</strong>
+          Usuario inicial: <strong>admin@aleph.com</strong> / <strong>admin123</strong>
+          <br />
+          Requiere la API en ejecución: <code>cd server &amp;&amp; npm run dev</code> (puerto 3001).
         </p>
 
         <Link to="/" className="admin-login__volver">

@@ -7,15 +7,14 @@
 
 import { MetaPagina } from '../componentes/interfaz/MetaPagina'
 import { Boton, TituloSeccion } from '../componentes/interfaz/Boton'
-import { proyectosGaleria } from '../datos/contenido'
-
-/** Tres proyectos destacados para el mosaico del hero. */
-const proyectosHero = proyectosGaleria.slice(0, 3)
+import { useContenidoEditorial } from '../hooks/useContenidoEditorial'
 
 /**
  * Página de galería con hero editorial, grid de portafolio y CTA de cotización.
  */
 export function PaginaGaleria() {
+  const { galeria: proyectosGaleria } = useContenidoEditorial()
+  const proyectosHero = proyectosGaleria.slice(0, 3)
   return (
     <div className="pagina-galeria">
       <MetaPagina

@@ -24,6 +24,7 @@ import { RUTA_ACCESO } from '../../config/accesoAdmin'
 
 import { esRutaDisenoIndustrial } from '../../config/disenoInicio'
 import { useContenidoInicio } from '../../hooks/useContenidoInicio'
+import { usePausarEfectosScroll } from '../../hooks/usePausarEfectosScroll'
 
 import { lazyPagina } from '../../utilidades/lazyPagina'
 
@@ -40,6 +41,8 @@ export function DisenoPrincipal() {
   const disenoIndustrial = esRutaDisenoIndustrial(pathname)
   const contenidoInicio = useContenidoInicio()
   const esInicio = pathname === '/'
+
+  usePausarEfectosScroll(disenoIndustrial)
 
   const mostrarPie = esInicio
 
@@ -75,8 +78,6 @@ export function DisenoPrincipal() {
 
     disenoIndustrial ? 'app-layout--inicio-industrial' : '',
 
-    disenoIndustrial && !esInicio ? 'app-layout--inicio-industrial-interno' : '',
-
   ]
 
     .filter(Boolean)
@@ -92,7 +93,7 @@ export function DisenoPrincipal() {
       {disenoIndustrial ? (
         <FondoIndustrial
           esInicio={esInicio}
-          imagenPersonalizada={esInicio ? contenidoInicio.hero.fondoImagen : null}
+          imagenPersonalizada={contenidoInicio.hero.fondoImagen}
         />
       ) : (
         <FondoAnimado />

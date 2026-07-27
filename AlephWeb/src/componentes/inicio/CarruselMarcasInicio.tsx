@@ -7,10 +7,11 @@ import type { Cliente } from '../../tipos/indice'
 
 interface PropiedadesCarruselMarcas {
   marcas: Cliente[]
-  logos: Record<string, string | null>
+  /** @deprecated Los logos van en cada marca.logo */
+  logos?: Record<string, string | null>
 }
 
-export function CarruselMarcasInicio({ marcas, logos }: PropiedadesCarruselMarcas) {
+export function CarruselMarcasInicio({ marcas, logos = {} }: PropiedadesCarruselMarcas) {
   if (marcas.length === 0) return null
 
   const pista = [...marcas, ...marcas, ...marcas]
@@ -24,6 +25,7 @@ export function CarruselMarcasInicio({ marcas, logos }: PropiedadesCarruselMarca
         >
           {pista.map((marca, i) => {
             const logo = logos[marca.id] ?? marca.logo
+            if (!logo) return null
             return (
               <div key={`${marca.id}-${i}`} className="marca-logo">
                 <img src={logo} alt={marca.name} loading="eager" decoding="async" />

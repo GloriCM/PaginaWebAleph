@@ -7,7 +7,8 @@
 
 import { Link, useParams } from 'react-router-dom'
 import { MetaPagina } from '../componentes/interfaz/MetaPagina'
-import { obtenerNoticiaPorSlug } from '../datos/contenido'
+import { obtenerNoticiaPorSlug } from '../datos/contenidoEditorial'
+import { useContenidoEditorial } from '../hooks/useContenidoEditorial'
 import { Boton } from '../componentes/interfaz/Boton'
 
 /**
@@ -16,6 +17,7 @@ import { Boton } from '../componentes/interfaz/Boton'
  */
 export function PaginaDetalleNoticia() {
   const { slug } = useParams<{ slug: string }>()
+  useContenidoEditorial()
   const article = slug ? obtenerNoticiaPorSlug(slug) : undefined
 
   if (!article) {

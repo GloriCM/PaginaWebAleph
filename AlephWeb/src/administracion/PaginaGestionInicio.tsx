@@ -3,19 +3,24 @@
  * @description Panel para editar todas las secciones visibles de la página de inicio.
  */
 
-import { useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { MetaPagina } from '../componentes/interfaz/MetaPagina'
+import { AlertaCambiosSinGuardar } from './componentes/AlertaCambiosSinGuardar'
 import { CampoImagenAdmin } from './componentes/CampoImagenAdmin'
 import { categorias } from '../datos/categorias'
-import { clientes } from '../datos/contenido'
 import {
+  cargarContenidoInicioDesdeApi,
+  crearMarcaVacia,
+  EVENTO_CONTENIDO_INICIO,
   guardarContenidoInicio,
   obtenerContenidoInicio,
   restablecerContenidoInicio,
   type ContenidoInicio,
   type MetricaHero,
+  type ValorEmpresa,
 } from '../datos/contenidoInicio'
-import type { Testimonio } from '../tipos/indice'
+import { snapshotFormulario, useFormularioSinGuardar } from '../hooks/useFormularioSinGuardar'
+import type { Cliente, Testimonio } from '../tipos/indice'
 
 type SeccionAdmin =
   | 'seo'
@@ -82,35 +87,78 @@ function CampoEnlace({
 }
 
 export function PaginaGestionInicio() {
+  const lineaBaseRef = useRef('')
   const [contenido, setContenido] = useState<ContenidoInicio>(() => obtenerContenidoInicio())
   const [seccion, setSeccion] = useState<SeccionAdmin>('hero')
   const [guardando, setGuardando] = useState(false)
   const [mensaje, setMensaje] = useState('')
+  const [tipoMensaje, setTipoMensaje] = useState<'ok' | 'error' | ''>('')
+  const [sincronizando, setSincronizando] = useState(true)
+
+  const hayCambios = useMemo(() => {
+    if (sincronizando) return false
+    return snapshotFormulario({ ...contenido, updatedAt: null }) !== lineaBaseRef.current
+  }, [contenido, sincronizando])
+
+  const { confirmarSiHayCambios } = useFormularioSinGuardar(hayCambios)
+
+  useEffect(() => {
+    let activo = true
+    setSincronizando(true)
+
+    cargarContenidoInicioDesdeApi()
+      .then((datos) => {
+        if (activo) {
+          setContenido(datos)
+          lineaBaseRef.current = snapshotFormulario({ ...datos, updatedAt: null })
+        }
+      })
+      .finally(() => {
+        if (activo) setSincronizando(false)
+      })
+
+    function sincronizar() {
+      setContenido(obtenerContenidoInicio())
+    }
+
+    window.addEventListener(EVENTO_CONTENIDO_INICIO, sincronizar)
+    return () => {
+      activo = false
+      window.removeEventListener(EVENTO_CONTENIDO_INICIO, sincronizar)
+    }
+  }, [])
 
   async function manejarGuardar(e: FormEvent) {
     e.preventDefault()
     setGuardando(true)
     setMensaje('')
+    setTipoMensaje('')
     try {
       const guardado = await guardarContenidoInicio(contenido)
       setContenido(guardado)
+      lineaBaseRef.current = snapshotFormulario({ ...guardado, updatedAt: null })
       setMensaje('Cambios guardados correctamente. Ya puedes verlos en la portada.')
+      setTipoMensaje('ok')
     } catch (error) {
       setMensaje(
         error instanceof Error
           ? error.message
           : 'No se pudo guardar. Si subiste imágenes muy pesadas, quita alguna e intenta de nuevo.',
       )
+      setTipoMensaje('error')
     } finally {
       setGuardando(false)
     }
   }
 
   async function manejarRestablecer() {
+    if (!confirmarSiHayCambios()) return
     if (!window.confirm('¿Restablecer todo el contenido de inicio a los valores originales?')) return
     const original = await restablecerContenidoInicio()
     setContenido(original)
+    lineaBaseRef.current = snapshotFormulario({ ...original, updatedAt: null })
     setMensaje('Contenido restablecido.')
+    setTipoMensaje('ok')
   }
 
   function actualizarMetrica(indice: number, campo: keyof MetricaHero, valor: string) {
@@ -119,6 +167,34 @@ export function PaginaGestionInicio() {
       metricas[indice] = { ...metricas[indice], [campo]: valor }
       return { ...prev, sobreNosotros: { ...prev.sobreNosotros, metricas } }
     })
+  }
+
+  function actualizarValor(indice: number, parcial: Partial<ValorEmpresa>) {
+    setContenido((prev) => {
+      const valores = [...prev.sobreNosotros.valores]
+      valores[indice] = { ...valores[indice], ...parcial }
+      return { ...prev, sobreNosotros: { ...prev.sobreNosotros, valores } }
+    })
+  }
+
+  function agregarValor() {
+    setContenido((prev) => ({
+      ...prev,
+      sobreNosotros: {
+        ...prev.sobreNosotros,
+        valores: [...prev.sobreNosotros.valores, { title: 'Nuevo valor', description: '' }],
+      },
+    }))
+  }
+
+  function quitarValor(indice: number) {
+    setContenido((prev) => ({
+      ...prev,
+      sobreNosotros: {
+        ...prev.sobreNosotros,
+        valores: prev.sobreNosotros.valores.filter((_, i) => i !== indice),
+      },
+    }))
   }
 
   function alternarCategoria(id: string) {
@@ -130,12 +206,51 @@ export function PaginaGestionInicio() {
     })
   }
 
-  function alternarMarca(id: string) {
+  function alternarMarcaVisible(id: string) {
     setContenido((prev) => {
       const ids = prev.marcasClientes.clienteIds.includes(id)
         ? prev.marcasClientes.clienteIds.filter((c) => c !== id)
         : [...prev.marcasClientes.clienteIds, id]
       return { ...prev, marcasClientes: { ...prev.marcasClientes, clienteIds: ids } }
+    })
+  }
+
+  function actualizarMarca(indice: number, parcial: Partial<Cliente>) {
+    setContenido((prev) => {
+      const items = [...prev.marcasClientes.items]
+      items[indice] = { ...items[indice], ...parcial }
+      return { ...prev, marcasClientes: { ...prev.marcasClientes, items } }
+    })
+  }
+
+  function agregarMarca() {
+    const nueva = crearMarcaVacia()
+    setContenido((prev) => ({
+      ...prev,
+      marcasClientes: {
+        ...prev.marcasClientes,
+        items: [...prev.marcasClientes.items, nueva],
+        clienteIds: [...prev.marcasClientes.clienteIds, nueva.id],
+      },
+    }))
+  }
+
+  function eliminarMarca(indice: number) {
+    const marca = contenido.marcasClientes.items[indice]
+    if (!marca) return
+    if (!window.confirm(`¿Eliminar la marca «${marca.name}»?`)) return
+
+    setContenido((prev) => {
+      const { [marca.id]: _logo, ...logosRestantes } = prev.marcasClientes.logos
+      return {
+        ...prev,
+        marcasClientes: {
+          ...prev.marcasClientes,
+          items: prev.marcasClientes.items.filter((_, i) => i !== indice),
+          clienteIds: prev.marcasClientes.clienteIds.filter((id) => id !== marca.id),
+          logos: logosRestantes,
+        },
+      }
     })
   }
 
@@ -188,8 +303,11 @@ export function PaginaGestionInicio() {
             <a href="/" target="_blank" rel="noreferrer">
               la portada
             </a>
-            . Los cambios se guardan en este navegador al pulsar «Publicar cambios».
+            . Pulsa «Publicar cambios» al final del formulario para guardar en la base de datos.
           </p>
+          {sincronizando && (
+            <p className="admin-subtitle admin-subtitle--sync">Sincronizando con la base de datos…</p>
+          )}
         </div>
         <button type="button" className="admin-inicio-reset" onClick={manejarRestablecer}>
           Restablecer todo
@@ -210,6 +328,7 @@ export function PaginaGestionInicio() {
       </nav>
 
       <form className="admin-inicio-form" onSubmit={manejarGuardar}>
+        <AlertaCambiosSinGuardar visible={hayCambios} etiquetaGuardar="Publicar cambios" />
         {seccion === 'seo' && (
           <section className="admin-section">
             <h2>SEO de la portada</h2>
@@ -276,11 +395,30 @@ export function PaginaGestionInicio() {
           <section className="admin-section">
             <h2>Sobre nosotros</h2>
             <CampoTexto
-              label="Título de sección"
+              label="Título de sección (portada)"
               value={contenido.sobreNosotros.titulo}
               onChange={(titulo) =>
                 setContenido((p) => ({ ...p, sobreNosotros: { ...p.sobreNosotros, titulo } }))
               }
+            />
+            <p className="admin-note">
+              Los cambios de esta pestaña se reflejan en la portada y en la página{' '}
+              <strong>/nosotros</strong>.
+            </p>
+            <CampoTexto
+              label="Título historia (/nosotros)"
+              value={contenido.sobreNosotros.historiaTitulo}
+              onChange={(historiaTitulo) =>
+                setContenido((p) => ({ ...p, sobreNosotros: { ...p.sobreNosotros, historiaTitulo } }))
+              }
+            />
+            <CampoTexto
+              label="Texto historia"
+              value={contenido.sobreNosotros.historia}
+              onChange={(historia) =>
+                setContenido((p) => ({ ...p, sobreNosotros: { ...p.sobreNosotros, historia } }))
+              }
+              multiline
             />
             <CampoTexto
               label="Título misión"
@@ -326,7 +464,53 @@ export function PaginaGestionInicio() {
                 setContenido((p) => ({ ...p, sobreNosotros: { ...p.sobreNosotros, boton } }))
               }
             />
-            <h3 className="admin-inicio-subtitulo">Métricas</h3>
+            <h3 className="admin-inicio-subtitulo">Valores (/nosotros)</h3>
+            <CampoTexto
+              label="Título de valores"
+              value={contenido.sobreNosotros.valoresTitulo}
+              onChange={(valoresTitulo) =>
+                setContenido((p) => ({ ...p, sobreNosotros: { ...p.sobreNosotros, valoresTitulo } }))
+              }
+            />
+            {contenido.sobreNosotros.valores.map((valor, i) => (
+              <div key={i} className="admin-inicio-tarjeta">
+                <div className="admin-inicio-tarjeta__header">
+                  <strong>Valor {i + 1}</strong>
+                  <button type="button" className="admin-inicio-quitar" onClick={() => quitarValor(i)}>
+                    Eliminar
+                  </button>
+                </div>
+                <CampoTexto
+                  label="Título"
+                  value={valor.title}
+                  onChange={(title) => actualizarValor(i, { title })}
+                />
+                <CampoTexto
+                  label="Descripción"
+                  value={valor.description}
+                  onChange={(description) => actualizarValor(i, { description })}
+                  multiline
+                />
+              </div>
+            ))}
+            <button type="button" className="admin-inicio-agregar" onClick={agregarValor}>
+              + Agregar valor
+            </button>
+            <h3 className="admin-inicio-subtitulo">Experiencia / métricas</h3>
+            <CampoTexto
+              label="Título experiencia (/nosotros)"
+              value={contenido.sobreNosotros.experienciaTitulo}
+              onChange={(experienciaTitulo) =>
+                setContenido((p) => ({ ...p, sobreNosotros: { ...p.sobreNosotros, experienciaTitulo } }))
+              }
+            />
+            <CampoTexto
+              label="Subtítulo experiencia"
+              value={contenido.sobreNosotros.experienciaSubtitulo}
+              onChange={(experienciaSubtitulo) =>
+                setContenido((p) => ({ ...p, sobreNosotros: { ...p.sobreNosotros, experienciaSubtitulo } }))
+              }
+            />
             {contenido.sobreNosotros.metricas.map((m, i) => (
               <div key={i} className="admin-inicio-fila">
                 <CampoTexto label="Número" value={m.metric} onChange={(v) => actualizarMetrica(i, 'metric', v)} />
@@ -393,6 +577,9 @@ export function PaginaGestionInicio() {
         {seccion === 'marcas' && (
           <section className="admin-section">
             <h2>Marcas con las que hemos trabajado</h2>
+            <p className="admin-note">
+              Las marcas también aparecen en <strong>/clientes</strong> (enlace «Ver todos»).
+            </p>
             <CampoTexto
               label="Título"
               value={contenido.marcasClientes.titulo}
@@ -413,40 +600,64 @@ export function PaginaGestionInicio() {
                 }))
               }
             />
-            <p className="admin-note">Selecciona las marcas a mostrar en inicio:</p>
-            <div className="admin-inicio-checklist">
-              {clientes.map((cliente) => (
-                <label key={cliente.id} className="admin-vacantes-check">
+            <CampoEnlace
+              label="Enlace «Ver todos»"
+              value={contenido.marcasClientes.enlaceVerTodo}
+              onChange={(enlaceVerTodo) =>
+                setContenido((p) => ({
+                  ...p,
+                  marcasClientes: { ...p.marcasClientes, enlaceVerTodo },
+                }))
+              }
+            />
+
+            <p className="admin-note admin-inicio-subtitulo">
+              Administra el catálogo de marcas. Marca la casilla «Mostrar en inicio» para incluirla en el
+              carrusel de la portada.
+            </p>
+
+            {contenido.marcasClientes.items.map((marca, i) => (
+              <div key={marca.id} className="admin-inicio-tarjeta">
+                <div className="admin-inicio-tarjeta__header">
+                  <strong>Marca {i + 1}</strong>
+                  <button type="button" className="admin-inicio-quitar" onClick={() => eliminarMarca(i)}>
+                    Eliminar
+                  </button>
+                </div>
+
+                <label className="admin-vacantes-check">
                   <input
                     type="checkbox"
-                    checked={contenido.marcasClientes.clienteIds.includes(cliente.id)}
-                    onChange={() => alternarMarca(cliente.id)}
+                    checked={contenido.marcasClientes.clienteIds.includes(marca.id)}
+                    onChange={() => alternarMarcaVisible(marca.id)}
                   />
-                  {cliente.name} ({cliente.industry})
+                  Mostrar en inicio
                 </label>
-              ))}
-            </div>
-            {contenido.marcasClientes.clienteIds.map((id) => {
-              const cliente = clientes.find((c) => c.id === id)
-              if (!cliente) return null
-              return (
-                <CampoImagenAdmin
-                  key={id}
-                  etiqueta={`Logo de ${cliente.name}`}
-                  nota="Sube el logotipo real de la marca. Si está vacío, se usa el placeholder del catálogo."
-                  valor={contenido.marcasClientes.logos[id] ?? null}
-                  onChange={(img) =>
-                    setContenido((p) => ({
-                      ...p,
-                      marcasClientes: {
-                        ...p.marcasClientes,
-                        logos: { ...p.marcasClientes.logos, [id]: img },
-                      },
-                    }))
-                  }
+
+                <CampoTexto
+                  label="Nombre de la marca"
+                  value={marca.name}
+                  onChange={(name) => actualizarMarca(i, { name })}
+                  required
                 />
-              )
-            })}
+                <CampoTexto
+                  label="Sector / industria"
+                  value={marca.industry}
+                  onChange={(industry) => actualizarMarca(i, { industry })}
+                />
+                <CampoImagenAdmin
+                  etiqueta="Logo de la marca"
+                  nota="Sube el logotipo en PNG, JPG o WebP. Se recomienda fondo transparente."
+                  valor={marca.logo || null}
+                  previewClassName="admin-inicio-preview-img admin-inicio-preview-img--logo"
+                  onChange={(logo) => actualizarMarca(i, { logo: logo ?? '' })}
+                />
+              </div>
+            ))}
+
+            <button type="button" className="admin-inicio-agregar" onClick={agregarMarca}>
+              + Agregar marca
+            </button>
           </section>
         )}
 
@@ -547,7 +758,10 @@ export function PaginaGestionInicio() {
 
         {seccion === 'contacto' && (
           <section className="admin-section">
-            <h2>Contacto en inicio</h2>
+            <h2>Contacto</h2>
+            <p className="admin-note">
+              Se muestra en la portada, en <strong>/contacto</strong> y en el pie de página.
+            </p>
             <CampoTexto
               label="Título"
               value={contenido.contacto.titulo}
@@ -567,7 +781,7 @@ export function PaginaGestionInicio() {
               multiline
             />
             <p className="admin-note">
-              El mapa se genera automáticamente a partir de la dirección (inicio y contacto).
+              El mapa se genera automáticamente a partir de la dirección.
             </p>
             <CampoTexto
               label="Teléfono"
@@ -597,7 +811,14 @@ export function PaginaGestionInicio() {
           <button type="submit" className="btn btn--gradient" disabled={guardando}>
             {guardando ? 'Publicando…' : 'Publicar cambios'}
           </button>
-          {mensaje && <p className="admin-vacantes-msg">{mensaje}</p>}
+          {mensaje && (
+            <p
+              className={`admin-vacantes-msg${tipoMensaje === 'error' ? ' admin-vacantes-msg--error' : ''}`}
+              role="alert"
+            >
+              {mensaje}
+            </p>
+          )}
         </div>
       </form>
     </>

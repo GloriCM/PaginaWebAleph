@@ -8,13 +8,14 @@
 
 import { Link } from 'react-router-dom'
 import { MetaPagina } from '../componentes/interfaz/MetaPagina'
-import { noticias } from '../datos/contenido'
+import { useContenidoEditorial } from '../hooks/useContenidoEditorial'
 
 /**
  * Renderiza el listado de noticias ordenadas en tarjetas con enlace al artículo completo.
  * @returns Elemento JSX con la cuadrícula de noticias publicadas.
  */
 export function PaginaNoticias() {
+  const { noticias } = useContenidoEditorial()
   return (
     <>
       <MetaPagina title="Noticias" description="Novedades y actualizaciones de Aleph Impresores." />

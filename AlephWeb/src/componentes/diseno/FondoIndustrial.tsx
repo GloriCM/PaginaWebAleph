@@ -1,5 +1,5 @@
 /**
- * Fondo fijo de la prensa con efecto Ken Burns (compartido entre páginas industriales).
+ * Fondo fijo de la prensa con efecto Ken Burns (compartido entre todas las páginas públicas).
  */
 
 import { useEffect } from 'react'
@@ -9,15 +9,17 @@ import imagenHero from '../../activos/prensa-heidelberg.webp'
 import imagenHeroFallback from '../../activos/prensa-heidelberg.png'
 
 interface PropiedadesFondoIndustrial {
-  /** En inicio: animación Ken Burns e imagen de mayor resolución. */
+  /** En inicio: prioridad alta de carga de imagen. */
   esInicio?: boolean
   /** Imagen personalizada desde admin (reemplaza la prensa por defecto). */
   imagenPersonalizada?: string | null
 }
 
+const CLASE_KEN_BURNS = 'hero-industrial__ken-burns hero-industrial__ken-burns--inicio'
+
 export function FondoIndustrial({ esInicio = false, imagenPersonalizada = null }: PropiedadesFondoIndustrial) {
   useEffect(() => {
-    if (!esInicio || imagenPersonalizada) return
+    if (imagenPersonalizada) return
 
     const preload = document.createElement('link')
     preload.rel = 'preload'
@@ -31,14 +33,12 @@ export function FondoIndustrial({ esInicio = false, imagenPersonalizada = null }
     return () => {
       preload.remove()
     }
-  }, [esInicio, imagenPersonalizada])
+  }, [imagenPersonalizada])
 
   if (imagenPersonalizada) {
     return (
       <div className="hero-industrial__fondo hero-industrial__fondo--layout" aria-hidden="true">
-        <div
-          className={`hero-industrial__ken-burns${esInicio ? ' hero-industrial__ken-burns--inicio' : ' hero-industrial__ken-burns--estatico'}`}
-        >
+        <div className={CLASE_KEN_BURNS}>
           <img
             className="hero-industrial__imagen"
             src={imagenPersonalizada}
@@ -55,31 +55,9 @@ export function FondoIndustrial({ esInicio = false, imagenPersonalizada = null }
     )
   }
 
-  if (!esInicio) {
-    return (
-      <div className="hero-industrial__fondo hero-industrial__fondo--layout" aria-hidden="true">
-        <div className="hero-industrial__ken-burns hero-industrial__ken-burns--estatico">
-          <img
-            className="hero-industrial__imagen"
-            src={imagenHero768}
-            alt=""
-            decoding="async"
-            loading="lazy"
-            fetchPriority="low"
-            width={768}
-            height={432}
-          />
-        </div>
-        <div className="hero-industrial__overlay" />
-        <div className="hero-industrial__fade-out" />
-        <div className="hero-industrial__vignette" />
-      </div>
-    )
-  }
-
   return (
     <div className="hero-industrial__fondo hero-industrial__fondo--layout" aria-hidden="true">
-      <div className="hero-industrial__ken-burns hero-industrial__ken-burns--inicio">
+      <div className={CLASE_KEN_BURNS}>
         <picture>
           <source
             type="image/webp"
@@ -91,7 +69,8 @@ export function FondoIndustrial({ esInicio = false, imagenPersonalizada = null }
             src={imagenHeroFallback}
             alt=""
             decoding="async"
-            fetchPriority="high"
+            fetchPriority={esInicio ? 'high' : 'low'}
+            loading={esInicio ? 'eager' : 'lazy'}
             width={1920}
             height={1080}
           />

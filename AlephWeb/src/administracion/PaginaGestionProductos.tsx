@@ -3,9 +3,12 @@
  * @description CRUD de productos del portafolio en el panel administrativo (RF-020).
  */
 
-import { useState, type FormEvent } from 'react'
+import { useMemo, useRef, useState, type FormEvent } from 'react'
 import { MetaPagina } from '../componentes/interfaz/MetaPagina'
+import { AlertaCambiosSinGuardar } from './componentes/AlertaCambiosSinGuardar'
 import { CampoImagenAdmin } from './componentes/CampoImagenAdmin'
+import { CampoGaleriaAdmin } from './componentes/CampoGaleriaAdmin'
+import { snapshotFormulario, useFormularioSinGuardar } from '../hooks/useFormularioSinGuardar'
 import { categorias } from '../datos/categorias'
 import {
   crearProducto,
@@ -21,8 +24,29 @@ import type { Producto } from '../tipos/indice'
 
 type ModoFormulario = 'lista' | 'crear' | 'editar'
 
+function snapshotProductoForm(
+  formulario: Producto,
+  materialesTexto: string,
+  acabadosTexto: string,
+  aplicacionesTexto: string,
+) {
+  return snapshotFormulario({
+    name: formulario.name,
+    slug: formulario.slug,
+    categoryId: formulario.categoryId,
+    shortDescription: formulario.shortDescription,
+    description: formulario.description,
+    image: formulario.image,
+    gallery: formulario.gallery,
+    materialesTexto,
+    acabadosTexto,
+    aplicacionesTexto,
+  })
+}
+
 export function PaginaGestionProductos() {
   const productos = useProductos()
+  const lineaBaseRef = useRef('')
   const [modo, setModo] = useState<ModoFormulario>('lista')
   const [formulario, setFormulario] = useState<Producto>(() => productoVacio())
   const [materialesTexto, setMaterialesTexto] = useState('')
@@ -31,8 +55,19 @@ export function PaginaGestionProductos() {
   const [guardando, setGuardando] = useState(false)
   const [mensaje, setMensaje] = useState('')
 
+  const hayCambios = useMemo(() => {
+    if (modo === 'lista') return false
+    return (
+      snapshotProductoForm(formulario, materialesTexto, acabadosTexto, aplicacionesTexto) !==
+      lineaBaseRef.current
+    )
+  }, [modo, formulario, materialesTexto, acabadosTexto, aplicacionesTexto])
+
+  const { confirmarSiHayCambios } = useFormularioSinGuardar(hayCambios)
+
   function abrirCrear() {
     const vacio = productoVacio(categorias[0]?.id ?? 'plegadizas')
+    lineaBaseRef.current = snapshotProductoForm(vacio, '', '', '')
     setFormulario(vacio)
     setMaterialesTexto('')
     setAcabadosTexto('')
@@ -42,15 +77,20 @@ export function PaginaGestionProductos() {
   }
 
   function abrirEditar(producto: Producto) {
+    const materials = joinListaAdmin(producto.materials)
+    const finishes = joinListaAdmin(producto.finishes)
+    const applications = joinListaAdmin(producto.applications)
+    lineaBaseRef.current = snapshotProductoForm({ ...producto }, materials, finishes, applications)
     setFormulario({ ...producto })
-    setMaterialesTexto(joinListaAdmin(producto.materials))
-    setAcabadosTexto(joinListaAdmin(producto.finishes))
-    setAplicacionesTexto(joinListaAdmin(producto.applications))
+    setMaterialesTexto(materials)
+    setAcabadosTexto(finishes)
+    setAplicacionesTexto(applications)
     setMensaje('')
     setModo('editar')
   }
 
   function cancelarFormulario() {
+    if (!confirmarSiHayCambios()) return
     setModo('lista')
     setMensaje('')
   }
@@ -176,6 +216,10 @@ export function PaginaGestionProductos() {
         </table>
       ) : (
         <form className="admin-inicio-form admin-productos-form" onSubmit={manejarEnvio}>
+          <AlertaCambiosSinGuardar
+            visible={hayCambios}
+            etiquetaGuardar={modo === 'crear' ? 'Crear producto' : 'Guardar cambios'}
+          />
           <div className="admin-header-row" style={{ marginBottom: '1rem' }}>
             <h2 style={{ margin: 0 }}>{modo === 'crear' ? 'Nuevo producto' : 'Editar producto'}</h2>
             <button type="button" className="btn btn--ghost" onClick={cancelarFormulario}>
@@ -248,6 +292,16 @@ export function PaginaGestionProductos() {
               valor={formulario.image || null}
               onChange={(img) => setFormulario((prev) => ({ ...prev, image: img ?? '' }))}
               nota="Recomendado: 600×400 px o similar (JPG, PNG, WebP)."
+            />
+          </section>
+
+          <section className="admin-section">
+            <h2>Galería adicional</h2>
+            <CampoGaleriaAdmin
+              etiqueta="Imágenes extra del producto"
+              imagenes={formulario.gallery}
+              onChange={(gallery) => setFormulario((prev) => ({ ...prev, gallery }))}
+              nota="Opcional. Puedes subir varias fotos (vistas, detalles, acabados, etc.)."
             />
           </section>
 

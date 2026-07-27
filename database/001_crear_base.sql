@@ -1,0 +1,2 @@
+-- Crear base de datos (ejecutar como superusuario, fuera de una transacción con otras BD)
+-- psql -U postgres -c "CREATE DATABASE aleph_web;"

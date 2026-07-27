@@ -1,0 +1,7 @@
+name = "aleph-web"
+pages_build_output_dir = "dist"
+compatibility_date = "2024-08-01"
+
+# La URL del backend Express (sin barra final).
+# En producción configúrala como secreto/variable en el panel de Cloudflare Pages:
+#   API_ORIGIN = https://api.tudominio.com

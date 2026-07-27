@@ -1,14 +1,31 @@
 /**
- * Catálogo de productos editable (IndexedDB + defaults).
+ * Catálogo de productos — API PostgreSQL con caché local de respaldo.
  */
 
 import type { Producto } from '../tipos/indice'
 import { productosIniciales } from './productos'
 import { establecerCacheProductos, obtenerCacheProductos } from './cacheProductos'
-import { eliminarDatoSitio, guardarDatoSitio, leerDatoSitio } from '../utilidades/almacenamientoSitio'
+import {
+  actualizarProductoApi,
+  crearProductoApi,
+  eliminarProductoApi,
+  haySesionAdmin,
+  obtenerProductosAdminApi,
+  obtenerProductosApi,
+  verificarApiDisponible,
+} from '../servicios/api'
 
 export const CLAVE_CATALOGO_PRODUCTOS = 'aleph_catalogo_productos'
 export const EVENTO_CATALOGO_PRODUCTOS = 'aleph:catalogo-productos-actualizado'
+
+async function usarApi() {
+  return verificarApiDisponible()
+}
+
+function notificarCambio(productos: Producto[]) {
+  establecerCacheProductos(productos)
+  window.dispatchEvent(new Event(EVENTO_CATALOGO_PRODUCTOS))
+}
 
 export function obtenerProductos(): Producto[] {
   return obtenerCacheProductos() ?? productosIniciales.map((p) => ({ ...p }))
@@ -41,23 +58,23 @@ export function crearSlugProducto(nombre: string, idExcluir?: string): string {
 }
 
 export async function cargarCatalogoProductos(): Promise<Producto[]> {
-  const guardado = await leerDatoSitio<Producto[]>(CLAVE_CATALOGO_PRODUCTOS)
-  const productos = guardado?.length ? guardado : productosIniciales.map((p) => ({ ...p }))
-  establecerCacheProductos(productos)
-  return productos
-}
+  if (await usarApi()) {
+    try {
+      const productos = haySesionAdmin()
+        ? await obtenerProductosAdminApi()
+        : await obtenerProductosApi()
+      notificarCambio(productos)
+      return productos
+    } catch (error) {
+      console.warn('No se pudo cargar productos desde API:', error)
+    }
+  }
 
-async function persistirProductos(productos: Producto[]): Promise<Producto[]> {
-  await guardarDatoSitio(CLAVE_CATALOGO_PRODUCTOS, productos)
-  establecerCacheProductos(productos)
-  window.dispatchEvent(new Event(EVENTO_CATALOGO_PRODUCTOS))
-  return productos
+  notificarCambio(productosIniciales.map((p) => ({ ...p })))
+  return obtenerProductos()
 }
 
 export async function guardarProducto(producto: Producto): Promise<Producto> {
-  const lista = [...obtenerProductos()]
-  const indice = lista.findIndex((p) => p.id === producto.id)
-
   const normalizado: Producto = {
     ...producto,
     slug: producto.slug.trim() || crearSlugProducto(producto.name, producto.id),
@@ -67,14 +84,17 @@ export async function guardarProducto(producto: Producto): Promise<Producto> {
     applications: producto.applications ?? [],
   }
 
-  if (indice >= 0) {
-    lista[indice] = normalizado
-  } else {
-    lista.push(normalizado)
+  if (!haySesionAdmin()) {
+    throw new Error('Sesión expirada. Cierra sesión e ingresa de nuevo al panel.')
   }
 
-  await persistirProductos(lista)
-  return normalizado
+  if (!(await usarApi())) {
+    throw new Error('La API no está disponible. Inicia el servidor en server/ (npm run dev).')
+  }
+
+  const guardado = await actualizarProductoApi(normalizado)
+  await cargarCatalogoProductos()
+  return guardado
 }
 
 export async function crearProducto(
@@ -82,8 +102,7 @@ export async function crearProducto(
 ): Promise<Producto> {
   const id = `prod-${Date.now()}`
   const slug = datos.slug?.trim() || crearSlugProducto(datos.name)
-
-  return guardarProducto({
+  const producto: Producto = {
     ...datos,
     id,
     slug,
@@ -91,20 +110,36 @@ export async function crearProducto(
     materials: datos.materials ?? [],
     finishes: datos.finishes ?? [],
     applications: datos.applications ?? [],
-  })
+  }
+
+  if (!haySesionAdmin()) {
+    throw new Error('Sesión expirada. Cierra sesión e ingresa de nuevo al panel.')
+  }
+
+  if (!(await usarApi())) {
+    throw new Error('La API no está disponible. Inicia el servidor en server/ (npm run dev).')
+  }
+
+  const creado = await crearProductoApi(producto)
+  await cargarCatalogoProductos()
+  return creado
 }
 
 export async function eliminarProducto(id: string): Promise<void> {
-  const lista = obtenerProductos().filter((p) => p.id !== id)
-  await persistirProductos(lista)
+  if (!haySesionAdmin()) {
+    throw new Error('Sesión expirada. Cierra sesión e ingresa de nuevo al panel.')
+  }
+
+  if (!(await usarApi())) {
+    throw new Error('La API no está disponible. Inicia el servidor en server/ (npm run dev).')
+  }
+
+  await eliminarProductoApi(id)
+  await cargarCatalogoProductos()
 }
 
 export async function restablecerCatalogoProductos(): Promise<Producto[]> {
-  await eliminarDatoSitio(CLAVE_CATALOGO_PRODUCTOS)
-  const originales = productosIniciales.map((p) => ({ ...p }))
-  establecerCacheProductos(originales)
-  window.dispatchEvent(new Event(EVENTO_CATALOGO_PRODUCTOS))
-  return originales
+  return cargarCatalogoProductos()
 }
 
 export function productoVacio(categoryId = 'plegadizas'): Producto {
@@ -132,4 +167,10 @@ export function parseListaAdmin(valor: string): string[] {
 
 export function joinListaAdmin(lista: string[]): string {
   return lista.join(', ')
+}
+
+/** Imagen principal + galería sin duplicados. */
+export function imagenesProducto(imagenPrincipal: string, galeria: string[]): string[] {
+  const extras = galeria.filter((img) => img && img !== imagenPrincipal)
+  return imagenPrincipal ? [imagenPrincipal, ...extras] : extras
 }

@@ -24,7 +24,7 @@ export async function enviarPostulacionRRHH(datos: DatosPostulacionRRHH) {
   const cvDataUrl = await archivoABase64(datos.cv)
   const emailDestino = configuracionSitio.emailRRHH
 
-  guardarSolicitud({
+  await guardarSolicitud({
     name: datos.name,
     email: datos.email,
     phone: datos.phone,

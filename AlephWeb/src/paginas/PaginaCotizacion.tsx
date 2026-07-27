@@ -39,6 +39,8 @@ export function PaginaCotizacion() {
   })
   const [archivo, setArchivo] = useState<File | null>(null)
   const [enviado, setEnviado] = useState(false)
+  const [enviando, setEnviando] = useState(false)
+  const [errorEnvio, setErrorEnvio] = useState('')
   const [contacto, setContacto] = useState({
     name: '',
     email: '',
@@ -57,15 +59,24 @@ export function PaginaCotizacion() {
     setContacto((prev) => ({ ...prev, [e.target.name]: e.target.value }))
   }
 
-  function manejarEnvio(e: FormEvent) {
+  async function manejarEnvio(e: FormEvent) {
     e.preventDefault()
-    guardarSolicitud({
-      ...contacto,
-      message: contacto.message || `Cotización: ${form.product}`,
-      type: 'quote',
-      quoteData: form,
-    })
-    setEnviado(true)
+    setEnviando(true)
+    setErrorEnvio('')
+
+    try {
+      await guardarSolicitud({
+        ...contacto,
+        message: contacto.message || `Cotización: ${form.product}`,
+        type: 'quote',
+        quoteData: form,
+      })
+      setEnviado(true)
+    } catch (err) {
+      setErrorEnvio(err instanceof Error ? err.message : 'No se pudo enviar la solicitud')
+    } finally {
+      setEnviando(false)
+    }
   }
 
   return (
@@ -223,7 +234,10 @@ export function PaginaCotizacion() {
                   </div>
                   <div className="formulario-vidrio__acciones">
                     <Boton type="button" variant="outline" onClick={() => setPaso(2)}>← Atrás</Boton>
-                    <Boton type="submit" variant="gradient">Enviar solicitud →</Boton>
+                    {errorEnvio && <p className="form__error">{errorEnvio}</p>}
+                    <Boton type="submit" variant="gradient" disabled={enviando}>
+                      {enviando ? 'Enviando…' : 'Enviar solicitud →'}
+                    </Boton>
                   </div>
                 </>
               )}

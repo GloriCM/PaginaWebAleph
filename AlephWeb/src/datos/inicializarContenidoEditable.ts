@@ -1,24 +1,17 @@
 /**
- * Arranque: carga contenido guardado antes de montar React.
+ * Arranque: carga contenido y catálogo desde la API.
  */
 
-import {
-  contenidoInicioPorDefecto,
-  fusionarContenidoInicio,
-  normalizarContenidoInicio,
-  CLAVE_CONTENIDO_INICIO,
-} from './contenidoInicio'
-import { establecerCacheContenidoInicio } from './cacheContenidoInicio'
-import { leerDatoSitio } from '../utilidades/almacenamientoSitio'
+import { cargarContenidoInicioDesdeApi } from './contenidoInicio'
+import { cargarContenidoEditorialDesdeApi } from './contenidoEditorial'
 import { cargarBannerVacantes } from './vacantesRRHH'
 import { cargarCatalogoProductos } from './catalogoProductos'
 
 export async function inicializarContenidoEditable() {
-  const guardado = await leerDatoSitio<Partial<typeof contenidoInicioPorDefecto>>(CLAVE_CONTENIDO_INICIO)
-  const contenido = guardado
-    ? normalizarContenidoInicio(fusionarContenidoInicio(guardado))
-    : { ...contenidoInicioPorDefecto }
-
-  establecerCacheContenidoInicio(contenido)
-  await Promise.all([cargarBannerVacantes(), cargarCatalogoProductos()])
+  await Promise.all([
+    cargarContenidoInicioDesdeApi(),
+    cargarContenidoEditorialDesdeApi(),
+    cargarBannerVacantes(),
+    cargarCatalogoProductos(),
+  ])
 }

@@ -1,20 +1,19 @@
 /**
  * @file PaginaClientes.tsx
- * @description Página que exhibe el portafolio de clientes y marcas que confían
- * en los servicios de Aleph Impresores, organizados por sector industrial.
- * Implementa el requisito funcional RF-012 (página de clientes).
+ * @description Marcas/clientes editables desde el panel admin.
  * @module paginas/PaginaClientes
  */
 
 import { MetaPagina } from '../componentes/interfaz/MetaPagina'
 import { TituloSeccion } from '../componentes/interfaz/Boton'
-import { clientes } from '../datos/contenido'
+import { obtenerMarcasCatalogo } from '../datos/contenidoInicio'
+import { useContenidoInicio } from '../hooks/useContenidoInicio'
 
-/**
- * Renderiza la cuadrícula de logotipos de clientes con su sector industrial.
- * @returns Elemento JSX con el listado de empresas cliente.
- */
 export function PaginaClientes() {
+  const contenido = useContenidoInicio()
+  const { marcasClientes } = contenido
+  const clientes = obtenerMarcasCatalogo(contenido)
+
   return (
     <>
       <MetaPagina
@@ -24,14 +23,14 @@ export function PaginaClientes() {
 
       <section className="page-hero">
         <div className="container">
-          <h1>Nuestros clientes</h1>
-          <p>Marcas líderes que han confiado en nosotros.</p>
+          <h1>{marcasClientes.titulo}</h1>
+          <p>{marcasClientes.subtitulo}</p>
         </div>
       </section>
 
       <section className="section">
         <div className="container">
-          <TituloSeccion title="Empresas que confían en nosotros" />
+          <TituloSeccion title={marcasClientes.titulo} subtitle={marcasClientes.subtitulo} />
           <div className="clients-grid">
             {clientes.map((client) => (
               <div key={client.id} className="client-logo">

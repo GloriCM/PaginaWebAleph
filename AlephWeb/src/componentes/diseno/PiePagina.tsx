@@ -19,6 +19,7 @@ import { LogoAleph } from '../interfaz/LogoAleph'
 import { configuracionSitio } from '../../datos/configuracionSitio'
 import { obtenerContactoPublico } from '../../datos/contactoPublico'
 import { useContenidoInicio } from '../../hooks/useContenidoInicio'
+import { useContenidoEditorial } from '../../hooks/useContenidoEditorial'
 
 import { useAccesoSecreto } from '../../hooks/useAccesoSecreto'
 
@@ -37,8 +38,11 @@ import { esRutaDisenoIndustrial } from '../../config/disenoInicio'
 export function PiePagina() {
 
   const { pathname } = useLocation()
-  const contacto = obtenerContactoPublico()
   useContenidoInicio()
+  const { sitio } = useContenidoEditorial()
+  const contacto = obtenerContactoPublico()
+  const tagline = sitio.tagline || configuracionSitio.tagline
+  const horarios = sitio.horarios.length > 0 ? sitio.horarios : configuracionSitio.horarios
 
   const industrial = esRutaDisenoIndustrial(pathname)
 
@@ -68,7 +72,7 @@ export function PiePagina() {
 
               <LogoAleph variant={industrial ? 'claro' : 'default'} className="footer__logo" />
 
-              <p>{configuracionSitio.tagline}</p>
+              <p>{tagline}</p>
 
             </div>
 
@@ -108,7 +112,7 @@ export function PiePagina() {
 
                 <ul className="footer__contact">
 
-                  {configuracionSitio.horarios.map((horario) => (
+                  {horarios.map((horario) => (
 
                     <li key={horario}>{horario}</li>
 

@@ -1,9 +1,14 @@
 /**
  * @file vacantesRRHH.ts
- * @description Banner de vacantes gestionado por Recursos Humanos.
+ * @description Banner de vacantes gestionado vía API.
  */
 
-import { eliminarDatoSitio, guardarDatoSitio, leerDatoSitio } from '../utilidades/almacenamientoSitio'
+import {
+  guardarBannerVacantesApi,
+  haySesionAdmin,
+  obtenerBannerVacantesApi,
+  verificarApiDisponible,
+} from '../servicios/api'
 
 export interface BannerVacantesRRHH {
   imageDataUrl: string | null
@@ -31,20 +36,25 @@ export function establecerCacheBannerVacantes(banner: BannerVacantesRRHH) {
 }
 
 export function obtenerBannerVacantes(): BannerVacantesRRHH {
-  if (cacheBanner) return cacheBanner
-  try {
-    const datos = localStorage.getItem(CLAVE_BANNER)
-    return datos ? { ...bannerPorDefecto, ...JSON.parse(datos) } : { ...bannerPorDefecto }
-  } catch {
-    return { ...bannerPorDefecto }
-  }
+  return cacheBanner ?? { ...bannerPorDefecto }
 }
 
 export async function cargarBannerVacantes(): Promise<BannerVacantesRRHH> {
-  const guardado = await leerDatoSitio<Partial<BannerVacantesRRHH>>(CLAVE_BANNER)
-  const banner = guardado ? { ...bannerPorDefecto, ...guardado } : { ...bannerPorDefecto }
-  cacheBanner = banner
-  return banner
+  if (await verificarApiDisponible()) {
+    try {
+      const remoto = await obtenerBannerVacantesApi()
+      if (remoto && typeof remoto === 'object') {
+        const banner = { ...bannerPorDefecto, ...(remoto as Partial<BannerVacantesRRHH>) }
+        cacheBanner = banner
+        return banner
+      }
+    } catch (error) {
+      console.warn('No se pudo cargar banner vacantes desde API:', error)
+    }
+  }
+
+  cacheBanner = { ...bannerPorDefecto }
+  return cacheBanner
 }
 
 export async function guardarBannerVacantes(parcial: Partial<BannerVacantesRRHH>): Promise<BannerVacantesRRHH> {
@@ -54,15 +64,27 @@ export async function guardarBannerVacantes(parcial: Partial<BannerVacantesRRHH>
     ...parcial,
     updatedAt: new Date().toISOString(),
   }
-  await guardarDatoSitio(CLAVE_BANNER, actualizado)
+
+  if (!haySesionAdmin()) {
+    throw new Error('Sesión expirada. Cierra sesión e ingresa de nuevo al panel.')
+  }
+
+  try {
+    await guardarBannerVacantesApi(actualizado)
+  } catch (error) {
+    throw new Error(error instanceof Error ? error.message : 'No se pudo guardar el banner.')
+  }
+
   cacheBanner = actualizado
   window.dispatchEvent(new Event(EVENTO_BANNER_VACANTES))
   return actualizado
 }
 
 export async function restablecerBannerVacantes(): Promise<BannerVacantesRRHH> {
-  await eliminarDatoSitio(CLAVE_BANNER)
   const original = { ...bannerPorDefecto }
+  if (haySesionAdmin() && (await verificarApiDisponible())) {
+    await guardarBannerVacantesApi(original)
+  }
   cacheBanner = original
   window.dispatchEvent(new Event(EVENTO_BANNER_VACANTES))
   return original
