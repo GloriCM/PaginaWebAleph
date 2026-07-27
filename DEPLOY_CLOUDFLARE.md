@@ -50,7 +50,7 @@ Puedes usar **Workers** (como `paginawebaleph`) o **Pages**. Si ya creaste un Wo
 
 | Variable | Valor | Notas |
 |----------|--------|--------|
-| `NODE_VERSION` | `20` | Versión de Node en el build |
+| `NODE_VERSION` | `22` | Requerido por Vite 8 / `@rolldown/plugin-babel` (Node ≥ 22.12) |
 | `API_ORIGIN` | `https://api.tudominio.com` | URL pública de tu API (sin `/api` al final) |
 
 5. Guarda y lanza **New deployment** (o push a `main`)
