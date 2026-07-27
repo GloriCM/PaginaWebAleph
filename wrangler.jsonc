@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "paginawebaleph",
+  "compatibility_date": "2026-07-27",
+  "observability": {
+    "enabled": true
+  },
+  "assets": {
+    "directory": "AlephWeb"
+  },
+  "compatibility_flags": [
+    "nodejs_compat"
+  ]
+}
