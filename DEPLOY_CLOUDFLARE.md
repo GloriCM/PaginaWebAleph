@@ -33,26 +33,29 @@ Asegúrate de que los cambios estén en la rama `main` (push desde tu PC).
 
 ### 2. Crear proyecto en Cloudflare
 
+Puedes usar **Workers** (como `paginawebaleph`) o **Pages**. Si ya creaste un Worker conectado a Git:
+
 1. Entra a [dash.cloudflare.com](https://dash.cloudflare.com)
-2. **Workers & Pages** → **Create** → **Pages** → **Connect to Git**
-3. Autoriza GitHub y elige el repo `PaginaWebAleph`
-4. Configuración de build:
+2. **Workers & Pages** → tu proyecto → **Settings** → **Build**
+3. Configuración **obligatoria**:
 
 | Campo | Valor |
 |--------|--------|
 | **Production branch** | `main` |
-| **Root directory** | `AlephWeb` |
+| **Root directory** | `AlephWeb` ← **no uses `/`** |
 | **Build command** | `npm ci && npm run build` |
-| **Build output directory** | `dist` |
+| **Deploy command** | `npx wrangler deploy` |
 
-5. **Environment variables** (Production):
+4. **Variables and secrets** (Production):
 
 | Variable | Valor | Notas |
 |----------|--------|--------|
 | `NODE_VERSION` | `20` | Versión de Node en el build |
 | `API_ORIGIN` | `https://api.tudominio.com` | URL pública de tu API (sin `/api` al final) |
 
-6. **Save and Deploy**
+5. Guarda y lanza **New deployment** (o push a `main`)
+
+Si creas desde cero: **Create** → **Pages** → **Connect to Git** también funciona; en ese caso Root = `AlephWeb`, output = `dist`, y **sin** deploy command extra.
 
 El archivo `public/_redirects` ya incluye la regla SPA (`/* → index.html`).
 
