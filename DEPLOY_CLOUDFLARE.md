@@ -43,7 +43,7 @@ Puedes usar **Workers** (como `paginawebaleph`) o **Pages**. Si ya creaste un Wo
 |--------|--------|
 | **Production branch** | `main` |
 | **Root directory** | `AlephWeb` ← **no uses `/`** |
-| **Build command** | `npm ci && npm run build` |
+| **Build command** | `npm install && npm run build` |
 | **Deploy command** | `npx wrangler deploy` |
 
 4. **Variables and secrets** (Production):
@@ -51,7 +51,7 @@ Puedes usar **Workers** (como `paginawebaleph`) o **Pages**. Si ya creaste un Wo
 | Variable | Valor | Notas |
 |----------|--------|--------|
 | `NODE_VERSION` | `22` | Requerido por Vite 8 / `@rolldown/plugin-babel` (Node ≥ 22.12) |
-| `API_ORIGIN` | `https://api.tudominio.com` | URL pública de tu API (sin `/api` al final) |
+| `API_ORIGIN` | `https://api-aleph.perla.work` | **Runtime** (Variables and secrets), no solo en Build. Sin esto el sitio no carga BD ni imágenes. |
 
 5. Guarda y lanza **New deployment** (o push a `main`)
 
