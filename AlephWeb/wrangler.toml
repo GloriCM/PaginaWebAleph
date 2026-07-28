@@ -2,10 +2,10 @@ name = "paginawebaleph"
 main = "worker.ts"
 compatibility_date = "2024-08-01"
 
+[vars]
+API_ORIGIN = "https://api-aleph.perla.work"
+
 [assets]
 directory = "./dist"
 binding = "ASSETS"
 not_found_handling = "single-page-application"
-
-# API_ORIGIN se configura en Cloudflare → Settings → Variables and secrets
-# Ejemplo: https://api.tudominio.com  (sin barra final, sin /api)
