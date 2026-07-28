@@ -16,11 +16,10 @@ import { inicializarContenidoEditable } from './datos/inicializarContenidoEditab
 const contenedor = document.getElementById('root')
 
 if (contenedor) {
-  inicializarContenidoEditable().then(() => {
-    createRoot(contenedor).render(
-      <StrictMode>
-        <Aplicacion />
-      </StrictMode>,
-    )
-  })
+  createRoot(contenedor).render(
+    <StrictMode>
+      <Aplicacion />
+    </StrictMode>,
+  )
+  void inicializarContenidoEditable()
 }

@@ -15,7 +15,6 @@ import {
   guardarContenidoInicioApi,
   haySesionAdmin,
   obtenerContenidoInicioApi,
-  verificarApiDisponible,
 } from '../servicios/api'
 
 export interface EnlaceBoton {
@@ -409,19 +408,18 @@ export function crearMarcaVacia(): Cliente {
 }
 
 export async function cargarContenidoInicioDesdeApi(): Promise<ContenidoInicio> {
-  if (await verificarApiDisponible()) {
-    try {
-      const remoto = await obtenerContenidoInicioApi()
-      if (remoto && typeof remoto === 'object') {
-        const contenido = normalizarContenidoInicio(
-          fusionarContenidoInicio(remoto as Partial<ContenidoInicio>),
-        )
-        establecerCacheContenidoInicio(contenido)
-        return contenido
-      }
-    } catch (error) {
-      console.warn('No se pudo cargar contenido inicio desde API:', error)
+  try {
+    const remoto = await obtenerContenidoInicioApi()
+    if (remoto && typeof remoto === 'object') {
+      const contenido = normalizarContenidoInicio(
+        fusionarContenidoInicio(remoto as Partial<ContenidoInicio>),
+      )
+      establecerCacheContenidoInicio(contenido)
+      window.dispatchEvent(new Event(EVENTO_CONTENIDO_INICIO))
+      return contenido
     }
+  } catch (error) {
+    console.warn('No se pudo cargar contenido inicio desde API:', error)
   }
 
   const original = { ...contenidoInicioPorDefecto }

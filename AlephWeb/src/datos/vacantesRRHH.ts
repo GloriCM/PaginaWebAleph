@@ -40,17 +40,15 @@ export function obtenerBannerVacantes(): BannerVacantesRRHH {
 }
 
 export async function cargarBannerVacantes(): Promise<BannerVacantesRRHH> {
-  if (await verificarApiDisponible()) {
-    try {
-      const remoto = await obtenerBannerVacantesApi()
-      if (remoto && typeof remoto === 'object') {
-        const banner = { ...bannerPorDefecto, ...(remoto as Partial<BannerVacantesRRHH>) }
-        cacheBanner = banner
-        return banner
-      }
-    } catch (error) {
-      console.warn('No se pudo cargar banner vacantes desde API:', error)
+  try {
+    const remoto = await obtenerBannerVacantesApi()
+    if (remoto && typeof remoto === 'object') {
+      const banner = { ...bannerPorDefecto, ...(remoto as Partial<BannerVacantesRRHH>) }
+      cacheBanner = banner
+      return banner
     }
+  } catch (error) {
+    console.warn('No se pudo cargar banner vacantes desde API:', error)
   }
 
   cacheBanner = { ...bannerPorDefecto }

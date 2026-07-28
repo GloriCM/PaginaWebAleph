@@ -42,6 +42,23 @@ export function mapProducto(fila: FilaProducto) {
   }
 }
 
+/** Versión ligera para listados públicos (sin galería ni descripción larga). */
+export function mapProductoResumen(fila: FilaProducto) {
+  return {
+    id: String(fila.id),
+    name: fila.name,
+    slug: fila.slug,
+    categoryId: fila.category_id,
+    shortDescription: fila.short_description ?? '',
+    description: '',
+    image: fila.image ?? '',
+    gallery: [] as string[],
+    materials: [] as string[],
+    finishes: [] as string[],
+    applications: [] as string[],
+  }
+}
+
 interface FilaSolicitud {
   id: string
   type: 'contact' | 'quote' | 'job'

@@ -11,12 +11,13 @@ import { MetaPagina } from '../componentes/interfaz/MetaPagina'
 import { Boton } from '../componentes/interfaz/Boton'
 import { useProductos } from '../hooks/useProductos'
 import { categorias } from '../datos/categorias'
-import { imagenesProducto } from '../datos/catalogoProductos'
+import { cargarProductoPorSlug, imagenesProducto } from '../datos/catalogoProductos'
 
 export function PaginaDetalleProducto() {
   const { slug } = useParams<{ slug: string }>()
   const productos = useProductos()
   const product = slug ? productos.find((p) => p.slug === slug) : undefined
+  const [cargandoDetalle, setCargandoDetalle] = useState(false)
   const category = product ? categorias.find((c) => c.id === product.categoryId) : undefined
 
   const imagenes = useMemo(
@@ -30,6 +31,18 @@ export function PaginaDetalleProducto() {
     setIndiceImagen(0)
   }, [product?.id])
 
+  useEffect(() => {
+    if (!slug) return
+    let activo = true
+    setCargandoDetalle(true)
+    void cargarProductoPorSlug(slug).finally(() => {
+      if (activo) setCargandoDetalle(false)
+    })
+    return () => {
+      activo = false
+    }
+  }, [slug])
+
   const indiceSeguro = Math.min(indiceImagen, Math.max(imagenes.length - 1, 0))
   const imagenActiva = imagenes[indiceSeguro] ?? product?.image ?? ''
 
@@ -37,8 +50,8 @@ export function PaginaDetalleProducto() {
     return (
       <section className="section">
         <div className="container empty-state">
-          <h1>Producto no encontrado</h1>
-          <Boton to="/productos">Volver al portafolio</Boton>
+          <h1>{cargandoDetalle ? 'Cargando producto…' : 'Producto no encontrado'}</h1>
+          {!cargandoDetalle && <Boton to="/productos">Volver al portafolio</Boton>}
         </div>
       </section>
     )

@@ -71,7 +71,7 @@ async function solicitud<T>(ruta: string, opciones: RequestInit = {}): Promise<T
   return datos as T
 }
 
-export async function verificarApiDisponible(timeoutMs = 5000) {
+export async function verificarApiDisponible(timeoutMs = 2500) {
   try {
     const controller = new AbortController()
     const timer = setTimeout(() => controller.abort(), timeoutMs)
@@ -107,6 +107,10 @@ export async function verificarSesionAdmin() {
 
 export async function obtenerProductosApi(): Promise<Producto[]> {
   return solicitud<Producto[]>('/productos')
+}
+
+export async function obtenerProductoPorSlugApi(slug: string): Promise<Producto> {
+  return solicitud<Producto>(`/productos/${encodeURIComponent(slug)}`)
 }
 
 export async function obtenerProductosAdminApi(): Promise<Producto[]> {

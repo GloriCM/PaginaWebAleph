@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { query } from '../db/pool.js'
 import { requireAuth, requireAdmin } from '../middleware/auth.js'
-import { mapProducto, slugify } from '../utils/helpers.js'
+import { mapProducto, mapProductoResumen, slugify } from '../utils/helpers.js'
 
 const router = Router()
 
@@ -26,7 +26,7 @@ router.get('/', async (_req, res) => {
        WHERE activo = TRUE
        ORDER BY name ASC`,
     )
-    res.json(rows.map((fila) => mapProducto(fila as Parameters<typeof mapProducto>[0])))
+    res.json(rows.map((fila) => mapProductoResumen(fila as Parameters<typeof mapProductoResumen>[0])))
   } catch (error) {
     console.error('Productos GET error:', error)
     res.status(500).json({ error: 'No se pudieron cargar los productos' })

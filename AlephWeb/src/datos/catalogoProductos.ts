@@ -10,6 +10,7 @@ import {
   crearProductoApi,
   eliminarProductoApi,
   haySesionAdmin,
+  obtenerProductoPorSlugApi,
   obtenerProductosAdminApi,
   obtenerProductosApi,
   verificarApiDisponible,
@@ -17,10 +18,6 @@ import {
 
 export const CLAVE_CATALOGO_PRODUCTOS = 'aleph_catalogo_productos'
 export const EVENTO_CATALOGO_PRODUCTOS = 'aleph:catalogo-productos-actualizado'
-
-async function usarApi() {
-  return verificarApiDisponible()
-}
 
 function notificarCambio(productos: Producto[]) {
   establecerCacheProductos(productos)
@@ -58,20 +55,40 @@ export function crearSlugProducto(nombre: string, idExcluir?: string): string {
 }
 
 export async function cargarCatalogoProductos(): Promise<Producto[]> {
-  if (await usarApi()) {
-    try {
-      const productos = haySesionAdmin()
-        ? await obtenerProductosAdminApi()
-        : await obtenerProductosApi()
-      notificarCambio(productos)
-      return productos
-    } catch (error) {
-      console.warn('No se pudo cargar productos desde API:', error)
-    }
+  try {
+    const productos = haySesionAdmin()
+      ? await obtenerProductosAdminApi()
+      : await obtenerProductosApi()
+    notificarCambio(productos)
+    return productos
+  } catch (error) {
+    console.warn('No se pudo cargar productos desde API:', error)
   }
 
   notificarCambio(productosIniciales.map((p) => ({ ...p })))
   return obtenerProductos()
+}
+
+export async function cargarProductoPorSlug(slug: string): Promise<Producto | null> {
+  const enCache = obtenerProductoPorSlug(slug)
+  if (enCache?.gallery?.length || enCache?.description?.trim()) {
+    return enCache
+  }
+
+  try {
+    const producto = await obtenerProductoPorSlugApi(slug)
+    const actuales = obtenerProductos()
+    const indice = actuales.findIndex((p) => p.slug === slug)
+    const actualizados =
+      indice >= 0
+        ? actuales.map((p, i) => (i === indice ? producto : p))
+        : [...actuales, producto]
+    notificarCambio(actualizados)
+    return producto
+  } catch (error) {
+    console.warn(`No se pudo cargar producto "${slug}" desde API:`, error)
+    return enCache ?? null
+  }
 }
 
 export async function guardarProducto(producto: Producto): Promise<Producto> {
@@ -88,7 +105,7 @@ export async function guardarProducto(producto: Producto): Promise<Producto> {
     throw new Error('Sesión expirada. Cierra sesión e ingresa de nuevo al panel.')
   }
 
-  if (!(await usarApi())) {
+  if (!(await verificarApiDisponible())) {
     throw new Error('La API no está disponible. Inicia el servidor en server/ (npm run dev).')
   }
 
@@ -116,7 +133,7 @@ export async function crearProducto(
     throw new Error('Sesión expirada. Cierra sesión e ingresa de nuevo al panel.')
   }
 
-  if (!(await usarApi())) {
+  if (!(await verificarApiDisponible())) {
     throw new Error('La API no está disponible. Inicia el servidor en server/ (npm run dev).')
   }
 
@@ -130,7 +147,7 @@ export async function eliminarProducto(id: string): Promise<void> {
     throw new Error('Sesión expirada. Cierra sesión e ingresa de nuevo al panel.')
   }
 
-  if (!(await usarApi())) {
+  if (!(await verificarApiDisponible())) {
     throw new Error('La API no está disponible. Inicia el servidor en server/ (npm run dev).')
   }
 

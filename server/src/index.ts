@@ -1,5 +1,6 @@
 import express from 'express'
 import cors from 'cors'
+import compression from 'compression'
 import { config } from './config.js'
 import { pool } from './db/pool.js'
 import { aplicarMigracionesDb } from './db/migraciones.js'
@@ -12,6 +13,7 @@ import contenidoRouter from './routes/contenido.js'
 
 const app = express()
 
+app.use(compression())
 app.use(
   cors({
     origin: config.corsOrigins,
