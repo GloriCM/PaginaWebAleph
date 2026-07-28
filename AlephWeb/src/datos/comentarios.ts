@@ -1,13 +1,10 @@
 /**
  * @file comentarios.ts
- * @description Persistencia local de comentarios/testimonios dejados por clientes.
- * @module datos/comentarios
+ * @description Comentarios/testimonios de clientes vía API PostgreSQL.
  */
 
 import type { Testimonio } from '../tipos/indice'
-
-/** Clave de almacenamiento en localStorage. */
-const CLAVE_COMENTARIOS = 'aleph_comentarios'
+import { crearComentarioApi, obtenerComentariosApi, verificarApiDisponible } from '../servicios/api'
 
 /** Datos mínimos para publicar un comentario. */
 export type DatosComentario = {
@@ -18,29 +15,49 @@ export type DatosComentario = {
   rating: number
 }
 
-/**
- * Guarda un comentario de cliente en localStorage.
- */
-export function guardarComentario(datos: DatosComentario): Testimonio {
-  const comentarios = obtenerComentarios()
-  const nuevo: Testimonio = {
-    ...datos,
-    id: crypto.randomUUID(),
-    rating: Math.min(5, Math.max(1, Math.round(datos.rating) || 5)),
+function mapComentarioApi(datos: {
+  id: string
+  name: string
+  company: string
+  role: string
+  content: string
+  rating: number
+}): Testimonio {
+  return {
+    id: datos.id,
+    name: datos.name,
+    company: datos.company ?? '',
+    role: datos.role ?? '',
+    content: datos.content,
+    rating: datos.rating,
   }
-  comentarios.push(nuevo)
-  localStorage.setItem(CLAVE_COMENTARIOS, JSON.stringify(comentarios))
-  return nuevo
 }
 
-/**
- * Obtiene los comentarios publicados por clientes.
- */
-export function obtenerComentarios(): Testimonio[] {
+/** Publica un comentario en la base de datos (visible para todos los visitantes). */
+export async function guardarComentario(datos: DatosComentario): Promise<Testimonio> {
+  if (!(await verificarApiDisponible())) {
+    throw new Error('No se pudo publicar el comentario. El servidor no está disponible.')
+  }
+
+  const guardado = await crearComentarioApi({
+    ...datos,
+    rating: Math.min(5, Math.max(1, Math.round(datos.rating) || 5)),
+  })
+
+  return mapComentarioApi(guardado)
+}
+
+/** Obtiene comentarios publicados por visitantes desde la API. */
+export async function cargarComentariosPublicos(): Promise<Testimonio[]> {
+  if (!(await verificarApiDisponible())) {
+    return []
+  }
+
   try {
-    const datos = localStorage.getItem(CLAVE_COMENTARIOS)
-    return datos ? JSON.parse(datos) : []
-  } catch {
+    const lista = await obtenerComentariosApi()
+    return lista.map(mapComentarioApi)
+  } catch (error) {
+    console.warn('No se pudieron cargar comentarios desde API:', error)
     return []
   }
 }

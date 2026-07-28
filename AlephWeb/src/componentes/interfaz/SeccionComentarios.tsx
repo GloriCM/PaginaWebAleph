@@ -1,12 +1,11 @@
 /**
  * @file SeccionComentarios.tsx
  * @description Testimonios en filas con estrellas y formulario para dejar comentario.
- * @module componentes/interfaz/SeccionComentarios
  */
 
 import { useState, useEffect, type FormEvent } from 'react'
 import { TituloSeccion, Boton } from './Boton'
-import { guardarComentario, obtenerComentarios } from '../../datos/comentarios'
+import { guardarComentario, cargarComentariosPublicos } from '../../datos/comentarios'
 import { useContenidoInicio } from '../../hooks/useContenidoInicio'
 import type { Testimonio } from '../../tipos/indice'
 
@@ -26,9 +25,6 @@ const mensajesValoracion: Record<number, string> = {
   5: '¡Excelente!',
 }
 
-/**
- * Renderiza estrellas según la valoración (1–5).
- */
 function Estrellas({ valor }: { valor: number }) {
   const llenas = Math.min(5, Math.max(0, Math.round(valor)))
   return (
@@ -39,32 +35,51 @@ function Estrellas({ valor }: { valor: number }) {
   )
 }
 
-/**
- * Lista de opiniones con rating y formulario para publicar un nuevo comentario.
- */
+function combinarComentarios(curados: Testimonio[], publicos: Testimonio[]): Testimonio[] {
+  const ids = new Set(curados.map((t) => t.id))
+  return [...curados, ...publicos.filter((t) => !ids.has(t.id))]
+}
+
 export function SeccionComentarios() {
   const { testimonios: configTestimonios } = useContenidoInicio()
-  const [comentarios, setComentarios] = useState<Testimonio[]>(() => [
-    ...configTestimonios.items,
-    ...obtenerComentarios(),
-  ])
+  const [comentarios, setComentarios] = useState<Testimonio[]>(() => [...configTestimonios.items])
   const [form, setForm] = useState(formularioInicial)
   const [enviado, setEnviado] = useState(false)
+  const [enviando, setEnviando] = useState(false)
+  const [errorEnvio, setErrorEnvio] = useState('')
 
   useEffect(() => {
-    setComentarios([...configTestimonios.items, ...obtenerComentarios()])
+    let activo = true
+
+    void cargarComentariosPublicos().then((publicos) => {
+      if (!activo) return
+      setComentarios(combinarComentarios(configTestimonios.items, publicos))
+    })
+
+    return () => {
+      activo = false
+    }
   }, [configTestimonios.items])
 
   function manejarCambio(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
   }
 
-  function manejarEnvio(e: FormEvent) {
+  async function manejarEnvio(e: FormEvent) {
     e.preventDefault()
-    const nuevo = guardarComentario(form)
-    setComentarios((prev) => [...prev, nuevo])
-    setForm(formularioInicial)
-    setEnviado(true)
+    setEnviando(true)
+    setErrorEnvio('')
+
+    try {
+      const nuevo = await guardarComentario(form)
+      setComentarios((prev) => combinarComentarios(prev, [nuevo]))
+      setForm(formularioInicial)
+      setEnviado(true)
+    } catch (err) {
+      setErrorEnvio(err instanceof Error ? err.message : 'No se pudo publicar el comentario')
+    } finally {
+      setEnviando(false)
+    }
   }
 
   return (
@@ -101,7 +116,7 @@ export function SeccionComentarios() {
                   <span className="dot dot--k" />
                 </div>
                 <h3>¡Gracias por tu comentario!</h3>
-                <p>Tu opinión ya aparece en la lista. Nos ayuda a seguir mejorando.</p>
+                <p>Tu opinión ya aparece en la lista y la verán todos los visitantes.</p>
                 <div className="form-success__acciones">
                   <Boton onClick={() => setEnviado(false)} className="form--contacto__enviar">
                     Escribir otro
@@ -156,9 +171,10 @@ export function SeccionComentarios() {
                     placeholder="Cuéntanos tu experiencia con Aleph Impresores…"
                   />
                 </label>
+                {errorEnvio && <p className="form__error">{errorEnvio}</p>}
                 <div className="seccion-comentarios__enviar">
-                  <Boton type="submit" className="form--contacto__enviar">
-                    Publicar comentario
+                  <Boton type="submit" className="form--contacto__enviar" disabled={enviando}>
+                    {enviando ? 'Publicando…' : 'Publicar comentario'}
                   </Boton>
                 </div>
               </form>

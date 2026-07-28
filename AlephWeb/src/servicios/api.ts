@@ -179,3 +179,38 @@ export async function guardarContenidoEditorialApi(contenido: unknown): Promise<
     body: JSON.stringify({ datos: contenido }),
   })
 }
+
+export async function obtenerComentariosApi() {
+  return solicitud<
+    Array<{
+      id: string
+      name: string
+      company: string
+      role: string
+      content: string
+      rating: number
+      createdAt: string
+    }>
+  >('/comentarios')
+}
+
+export async function crearComentarioApi(datos: {
+  name: string
+  company: string
+  role: string
+  content: string
+  rating: number
+}) {
+  return solicitud<{
+    id: string
+    name: string
+    company: string
+    role: string
+    content: string
+    rating: number
+    createdAt: string
+  }>('/comentarios', {
+    method: 'POST',
+    body: JSON.stringify(datos),
+  })
+}
