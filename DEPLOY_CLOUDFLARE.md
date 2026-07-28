@@ -57,7 +57,7 @@ Puedes usar **Workers** (como `paginawebaleph`) o **Pages**. Si ya creaste un Wo
 
 Si creas desde cero: **Create** → **Pages** → **Connect to Git** también funciona; en ese caso Root = `AlephWeb`, output = `dist`, y **sin** deploy command extra.
 
-El archivo `public/_redirects` ya incluye la regla SPA (`/* → index.html`).
+La SPA (rutas de React) se maneja en `wrangler.toml` con `not_found_handling = "single-page-application"`. **No uses** `public/_redirects` en Workers: provoca un bucle infinito al desplegar.
 
 La carpeta `functions/api/` hace de proxy: las peticiones a `/api/...` del sitio se reenvían a `API_ORIGIN`.
 
@@ -171,9 +171,8 @@ Si no quieres mantener un túnel en Windows:
 
 | Archivo | Función |
 |---------|---------|
-| `AlephWeb/public/_redirects` | Rutas SPA en Pages |
-| `AlephWeb/functions/api/[[path]].ts` | Proxy `/api` → backend |
-| `AlephWeb/wrangler.toml` | Config Wrangler / Pages |
+| `AlephWeb/functions/api/[[path]].ts` | Proxy `/api` → backend (solo Pages) |
+| `AlephWeb/wrangler.toml` | Config Wrangler / SPA + assets |
 | `deploy/cloudflared.example.yml` | Ejemplo de túnel para la API |
 
 ---
