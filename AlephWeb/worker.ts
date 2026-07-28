@@ -1,9 +1,11 @@
 /**
  * Worker de producción: sirve el build de Vite y reenvía /api/* al backend Express.
  */
+const API_ORIGIN_DEFECTO = 'https://api-aleph.perla.work'
+
 interface Env {
   ASSETS: Fetcher
-  API_ORIGIN: string
+  API_ORIGIN?: string
 }
 
 export default {
@@ -11,14 +13,7 @@ export default {
     const url = new URL(request.url)
 
     if (url.pathname.startsWith('/api/')) {
-      const origin = (env.API_ORIGIN ?? '').replace(/\/$/, '')
-      if (!origin) {
-        return Response.json(
-          { error: 'API no configurada. Define API_ORIGIN en Cloudflare.' },
-          { status: 503 },
-        )
-      }
-
+      const origin = (env.API_ORIGIN ?? API_ORIGIN_DEFECTO).replace(/\/$/, '')
       const path = url.pathname.replace(/^\/api\/?/, '')
       const destino = `${origin}/api/${path}${url.search}`
       const headers = new Headers(request.headers)
