@@ -463,3 +463,4 @@ export async function restablecerContenidoInicio(): Promise<ContenidoInicio> {
 }
 
 export { archivoABase64 } from './vacantesRRHH'
+export { archivoAImagenWebp } from '../utilidades/optimizarImagen'

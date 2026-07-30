@@ -2,8 +2,8 @@
  * Campo para agregar y quitar varias imágenes en el panel admin.
  */
 
-import type { ChangeEvent } from 'react'
-import { archivoABase64 } from '../../datos/contenidoInicio'
+import { useState, type ChangeEvent } from 'react'
+import { archivoAImagenWebp } from '../../utilidades/optimizarImagen'
 
 interface PropiedadesCampoGaleriaAdmin {
   etiqueta: string
@@ -18,13 +18,26 @@ export function CampoGaleriaAdmin({
   onChange,
   nota,
 }: PropiedadesCampoGaleriaAdmin) {
+  const [optimizando, setOptimizando] = useState(false)
+  const [error, setError] = useState('')
+
   async function manejarAgregar(e: ChangeEvent<HTMLInputElement>) {
     const archivo = e.target.files?.[0]
     if (!archivo) return
     if (!archivo.type.startsWith('image/')) return
-    const dataUrl = await archivoABase64(archivo)
-    onChange([...imagenes, dataUrl])
-    e.target.value = ''
+
+    setOptimizando(true)
+    setError('')
+
+    try {
+      const dataUrl = await archivoAImagenWebp(archivo)
+      onChange([...imagenes, dataUrl])
+    } catch {
+      setError('No se pudo optimizar la imagen. Intenta con JPG o PNG.')
+    } finally {
+      setOptimizando(false)
+      e.target.value = ''
+    }
   }
 
   function quitar(indice: number) {
@@ -50,9 +63,10 @@ export function CampoGaleriaAdmin({
       )}
 
       <label className="admin-vacantes-upload">
-        <input type="file" accept="image/*" onChange={manejarAgregar} />
-        <span>+ Agregar imagen a la galería</span>
+        <input type="file" accept="image/*" onChange={manejarAgregar} disabled={optimizando} />
+        <span>{optimizando ? 'Optimizando a WebP…' : '+ Agregar imagen a la galería'}</span>
       </label>
+      {error && <p className="form__error">{error}</p>}
     </div>
   )
 }

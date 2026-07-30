@@ -9,12 +9,12 @@ import { AlertaCambiosSinGuardar } from './componentes/AlertaCambiosSinGuardar'
 import { configuracionSitio } from '../datos/configuracionSitio'
 import { snapshotFormulario, useFormularioSinGuardar } from '../hooks/useFormularioSinGuardar'
 import {
-  archivoABase64,
   cargarBannerVacantes,
   guardarBannerVacantes,
   obtenerBannerVacantes,
   type BannerVacantesRRHH,
 } from '../datos/vacantesRRHH'
+import { archivoAImagenWebp } from '../utilidades/optimizarImagen'
 
 export function PaginaGestionVacantes() {
   const lineaBaseRef = useRef('')
@@ -22,6 +22,7 @@ export function PaginaGestionVacantes() {
   const [banner, setBanner] = useState<BannerVacantesRRHH>(() => obtenerBannerVacantes())
   const [cargando, setCargando] = useState(true)
   const [guardando, setGuardando] = useState(false)
+  const [optimizandoImagen, setOptimizandoImagen] = useState(false)
   const [mensaje, setMensaje] = useState('')
 
   const hayCambios = useMemo(() => {
@@ -55,9 +56,17 @@ export function PaginaGestionVacantes() {
       return
     }
 
-    const imageDataUrl = await archivoABase64(archivo)
-    setBanner((prev) => ({ ...prev, imageDataUrl }))
-    setMensaje('')
+    setOptimizandoImagen(true)
+    try {
+      const imageDataUrl = await archivoAImagenWebp(archivo)
+      setBanner((prev) => ({ ...prev, imageDataUrl }))
+      setMensaje('')
+    } catch {
+      setMensaje('No se pudo optimizar la imagen. Intenta con JPG o PNG.')
+    } finally {
+      setOptimizandoImagen(false)
+      e.target.value = ''
+    }
   }
 
   async function manejarEnvio(e: FormEvent) {
@@ -98,12 +107,18 @@ export function PaginaGestionVacantes() {
           <section className="admin-section">
             <h2>Imagen de vacantes</h2>
             <p className="admin-note" style={{ marginTop: 0 }}>
-              Recomendado: afiche horizontal o flyer con los puestos abiertos (JPG/PNG).
+              Recomendado: afiche horizontal o flyer (JPG/PNG). Se convierte automáticamente a WebP optimizado.
             </p>
 
             <label className="admin-vacantes-upload">
-              <input type="file" accept="image/*" onChange={manejarImagen} />
-              <span>{banner.imageDataUrl ? 'Cambiar imagen' : 'Subir imagen de vacantes'}</span>
+              <input type="file" accept="image/*" onChange={manejarImagen} disabled={optimizandoImagen} />
+              <span>
+                {optimizandoImagen
+                  ? 'Optimizando a WebP…'
+                  : banner.imageDataUrl
+                    ? 'Cambiar imagen'
+                    : 'Subir imagen de vacantes'}
+              </span>
             </label>
 
             {banner.imageDataUrl && (
